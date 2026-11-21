@@ -10,7 +10,7 @@ from app.services import calendar_service as cal
 from app.services import deposit_service as dep
 from app.models.enums import PaymentMethod, TransactionStatus
 from app.services.settings_service import default_duration
-from app.utils.dates import today_local
+from app.utils.dates import now_local, today_local
 
 bp = Blueprint("agenda", __name__, url_prefix="/agenda")
 
@@ -70,6 +70,7 @@ def detail(appt_id):
     deposit_form = DepositForm()
     deposit_form.date.data = today_local()
     return render_template("agenda/detail.html", appt=appt, S=AppointmentStatus, editable=svc.is_editable(appt),
+                           can_mark_done=appt.starts_at <= now_local(),
                            deposit=dep.deposit_transaction(appt), deposit_form=deposit_form)
 
 

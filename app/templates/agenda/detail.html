@@ -42,7 +42,7 @@
         <div class="action-stack">
           {% if appt.status == S.WAITING %}{{ act("agenda.confirm", "Confirmar atendimento", "primary") }}{% endif %}
           {% if appt.status in (S.WAITING, S.CONFIRMED) %}
-            {{ act("agenda.finish", "Marcar como realizado", "primary" if appt.status == S.CONFIRMED else "ghost") }}
+            {% if can_mark_done %}{{ act("agenda.finish", "Marcar como realizado", "primary" if appt.status == S.CONFIRMED else "ghost") }}{% endif %}
             <a class="btn btn-ghost" href="{{ url_for('agenda.reschedule', appt_id=appt.id) }}">Remarcar</a>
             {{ act("agenda.cancel", "Cancelar atendimento", "ghost", confirm=cancel_msg) }}
           {% elif appt.status == S.CANCELED %}
