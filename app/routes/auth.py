@@ -15,7 +15,11 @@ def login():
 
     form = LoginForm()
     if form.validate_on_submit():
-        result = auth_service.authenticate(form.email.data, form.password.data)
+        result = auth_service.authenticate(
+            form.email.data, form.password.data,
+            ip_address=request.remote_addr,
+            user_agent=request.user_agent.string,
+        )
         if result.ok:
             login_user(result.user, remember=form.remember.data)
             next_url = request.args.get("next")

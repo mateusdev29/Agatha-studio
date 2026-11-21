@@ -46,6 +46,9 @@ class Config:
     # Proteção contra força bruta no login
     MAX_FAILED_LOGINS = 5
     LOCKOUT_MINUTES = 15
+    MAX_DEVICE_FAILED_LOGINS = 5
+    DEVICE_LOGIN_WINDOW_MINUTES = 15
+    DEVICE_LOCKOUT_MINUTES = 15
 
     QUOTE_VALIDITY_DAYS = 15                  # validade padrão de um orçamento novo
     STUDIO_NAME = "Agatha Souza Tattoo Studio"

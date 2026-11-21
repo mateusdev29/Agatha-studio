@@ -7,6 +7,7 @@ from app.models.client import Client
 from app.models.evaluation import Evaluation
 from app.models.finance import FinancialTransaction
 from app.models.inventory import InventoryItem, InventoryMovement
+from app.models.login_throttle import LoginThrottle
 from app.models.project import Project, ProjectReference, ProjectSession
 from app.models.quote import Quote
 from app.models.settings import Category, Service, StudioSetting
@@ -15,6 +16,6 @@ from app.models.user import User
 __all__ = [
     "ActivityLog", "AnamnesisResponse", "AnamnesisTemplate", "Appointment",
     "BodyRegion", "Category", "Client", "Evaluation", "FinancialTransaction",
-    "InventoryItem", "InventoryMovement", "Project", "ProjectReference",
+    "InventoryItem", "InventoryMovement", "LoginThrottle", "Project", "ProjectReference",
     "ProjectSession", "Quote", "Service", "StudioSetting", "User",
 ]
