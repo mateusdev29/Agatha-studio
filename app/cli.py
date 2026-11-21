@@ -40,6 +40,17 @@ def register_cli(app):
             raise click.ClickException("Banco SQLite em arquivo não encontrado. Rode primeiro: flask --app wsgi setup")
         click.echo(f"[OK] Backup criado: {backup_database(path)}")
 
+    @app.cli.command("backup-offsite")
+    def backup_offsite_command():
+        """Envia uma cópia cifrada do banco e uploads para o repositório Restic configurado."""
+        from app.services.offsite_backup import OffsiteBackupError, create_offsite_backup
+
+        try:
+            result = create_offsite_backup()
+        except OffsiteBackupError as exc:
+            raise click.ClickException(str(exc)) from exc
+        click.echo(result)
+
     @app.cli.command("setup")
     def setup_command():
         """Prepara tudo de forma segura e repetível: .env, banco, migrations, dados-base e administradora."""

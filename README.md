@@ -56,6 +56,8 @@ Na primeira execução, o sistema cria o `.env` e gera uma senha aleatória para
 | `SECRET_KEY` | Assina o login. **Tem de ser sempre a mesma** neste computador; o `start.bat` gera uma vez e grava. Manual: `python -c "import secrets; print(secrets.token_hex(32))"`. Obrigatória em produção. |
 | `DATABASE_URL` | Opcional. Padrão: SQLite em `instance/studio.db` |
 | `DEV_ADMIN_NAME` / `DEV_ADMIN_EMAIL` / `DEV_ADMIN_PASSWORD` | Login da administradora (só desenvolvimento). Senha com 10+ caracteres; em branco = o sistema gera e grava uma vez. Se a senha tiver `#` precedido de espaço ou aspas, coloque-a entre aspas. |
+| `RESTIC_REPOSITORY` | Opcional. Repositório Restic remoto para backup cifrado; para Dropbox use `rclone:dropbox:Agatha-Studio-Backups`. |
+| `RESTIC_PASSWORD_FILE` | Opcional. Caminho do arquivo local com a senha do repositório Restic. Mantenha-o fora da pasta do projeto e acessível somente à conta do Windows que executa o backup. |
 
 Valores já definidos no ambiente real do Windows têm prioridade sobre o `.env`. O `.env` pode ser salvo pelo Bloco de Notas (BOM e CRLF são tratados).
 Trocar `DEV_ADMIN_*` depois **não altera** o usuário existente: para mudar a senha use *Configurações > Perfil*.
@@ -99,6 +101,25 @@ login, rejeitam POST sem CSRF, não aceitam GET em rotas que alteram estado e n�
 4. **Backups:** rode `flask --app wsgi backup` (cópia consistente em `instance/backups/`, mesmo com o sistema aberto) e guarde também a pasta `uploads/`.
 5. Crie a usuária com `flask create-user`; não use o seed de desenvolvimento.
 6. A expiração de orçamentos roda no primeiro acesso logado de cada hora; não requer tarefa agendada.
+
+### Backup externo diário (Windows)
+O comando `flask --app wsgi backup-offsite` usa Restic para cifrar e enviar uma cópia consistente do SQLite e a pasta `uploads/` ao Dropbox. Instale Restic e rclone, coloque ambos no `PATH` do Windows e faça uma única configuração OAuth com `rclone config`, usando o nome do remoto `dropbox`. O rclone guarda o token da conta no perfil do Windows; não envie esse arquivo nem dados reais de clientes para GitHub.
+
+Crie uma senha longa e exclusiva para o repositório Restic e guarde-a em um arquivo fora do projeto, com acesso limitado à conta do Windows do estúdio. O Dropbox não consegue descriptografar o conteúdo sem essa senha: guarde uma cópia segura dela separadamente. Inicialize o repositório uma só vez (substitua o caminho pelo real):
+```powershell
+restic -r rclone:dropbox:Agatha-Studio-Backups --password-file 'C:\caminho\seguro\restic-password.txt' init
+```
+No `.env`, configure `RESTIC_REPOSITORY=rclone:dropbox:Agatha-Studio-Backups` e `RESTIC_PASSWORD_FILE` com o mesmo caminho do arquivo de senha. Em seguida, rode o comando manualmente e confirme que criou um snapshot:
+```powershell
+.\.venv\Scripts\python.exe -m flask --app wsgi backup-offsite
+restic -r rclone:dropbox:Agatha-Studio-Backups --password-file 'C:\caminho\seguro\restic-password.txt' snapshots
+```
+
+Depois do teste manual, crie a tarefa diária (padrão: 22:00) no PowerShell, dentro da pasta do projeto:
+```powershell
+.\scripts\install_daily_backup_task.ps1
+```
+Para escolher outro horário use `-Time '23:30'`. A tarefa roda sob a conta atual do Windows quando ela estiver conectada; se o computador estiver desligado, o Task Scheduler tenta executá-la no próximo login. O Histórico do Agendador de Tarefas mostra o resultado. Cada execução mantém também o snapshot local do banco (os cinco mais recentes); os snapshots remotos não são apagados automaticamente, para preservar histórico até definirmos uma política de retenção.
 
 ## Segurança
 - Senhas com hash (scrypt); bloqueio de 15 min após 5 falhas; erro de login genérico; `?next=` validado; logout só por POST.
