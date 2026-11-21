@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import page_header %}
+{% from "components/_forms.html" import field, form_errors %}
+{% set title = "Editar avaliação" if item else "Nova avaliação" %}
+{% block title %}{{ title }} · Agatha Souza Studio{% endblock %}
+{% block content %}
+  {{ page_header(title, item.client.name if item else None) }}
+  <section class="panel"><form class="panel-body" method="post" novalidate>{{ form.hidden_tag() }}{{ form_errors(form) }}
+    <div class="form-grid">
+      {{ field(form.client_id) }}{{ field(form.appointment_id, **{"data-depends-on": "client_id"}) }}
+      {{ field(form.score, type="number", min=0, max=10) }}{{ field(form.evaluated_on) }}
+      {{ field(form.comment, span=2, rows=3) }}
+    </div>
+    <div class="form-actions"><a class="btn btn-ghost" href="{{ url_for('satisfaction.index') }}">Cancelar</a><button class="btn btn-primary" type="submit">{{ "Salvar alterações" if item else "Registrar" }}</button></div>
+  </form>
+  {% if item %}<form class="upload-row" method="post" action="{{ url_for('satisfaction.delete', item_id=item.id) }}" data-confirm="Esta ação não pode ser desfeita." data-confirm-title="Excluir avaliação?" data-confirm-label="Excluir" data-confirm-tone="danger">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-ghost btn-sm" type="submit">Excluir avaliação</button></form>{% endif %}
+  </section>
+{% endblock %}

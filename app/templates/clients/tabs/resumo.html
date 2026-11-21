@@ -1,0 +1,45 @@
+{% from "components/_ui.html" import ledger_item, empty_state %}
+<section class="ledger" aria-label="Resumo do cliente">
+  {{ ledger_item("Projetos", summary.projects) }}
+  {{ ledger_item("Atendimentos realizados", summary.appointments_done) }}
+  {{ ledger_item("Total pago", summary.paid_cents|brl, ("A receber: " ~ (summary.pending_cents|brl)) if summary.pending_cents else None, money=True) }}
+  {{ ledger_item("Avaliação média", (("%g"|format(summary.average_score)|replace(".", ",")) ~ "/10") if summary.average_score is not none else "—",
+                 (summary.evaluations ~ (" avaliação" if summary.evaluations == 1 else " avaliações")) if summary.evaluations else "Sem avaliações") }}
+</section>
+
+<div class="split">
+  <section class="panel">
+    <div class="panel-head"><h2 class="panel-title">Contato</h2></div>
+    <dl class="datalist">
+      <div><dt>Telefone</dt><dd>{{ client.phone or "—" }}</dd></div>
+      <div><dt>E-mail</dt><dd>{{ client.email or "—" }}</dd></div>
+      <div><dt>Instagram</dt><dd>{% if client.instagram %}@{{ client.instagram }}{% else %}—{% endif %}</dd></div>
+      <div><dt>Nascimento</dt><dd>{% if client.birth_date %}{{ client.birth_date|date_br }} ({{ client.birth_date|age }} anos){% else %}—{% endif %}</dd></div>
+      <div><dt>Como conheceu</dt><dd>{{ client.source or "—" }}</dd></div>
+    </dl>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2 class="panel-title">Atendimentos</h2></div>
+    <dl class="datalist">
+      <div><dt>Próximo</dt><dd>{% if summary.next_appointment %}{{ summary.next_appointment.starts_at|day_label }}, {{ summary.next_appointment.starts_at.strftime("%H:%M") }}{% else %}—{% endif %}</dd></div>
+      <div><dt>Último</dt><dd>{% if summary.last_appointment %}{{ summary.last_appointment.starts_at|date_br }}{% else %}—{% endif %}</dd></div>
+    </dl>
+  </section>
+</div>
+
+<section class="panel section-gap" aria-labelledby="h-history">
+  <div class="panel-head"><h2 class="panel-title" id="h-history">Histórico completo</h2></div>
+  {% if history %}
+    <ol class="timeline">
+      {% for ev in history %}
+      <li data-kind="{{ ev.kind }}">
+        <p class="timeline-title">{{ ev.title }}</p>
+        <p class="timeline-meta">{{ ev.when|date_br }}{% if ev.detail %} · {{ ev.detail }}{% endif %}</p>
+      </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    {{ empty_state("clock", "Sem histórico ainda", "Atendimentos, orçamentos, projetos e pagamentos deste cliente aparecem aqui em ordem cronológica.", compact=True) }}
+  {% endif %}
+</section>

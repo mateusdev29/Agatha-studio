@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import page_header %}
+{% from "components/_forms.html" import field, form_errors %}
+{% set title = "Editar projeto" if project else "Novo projeto" %}
+{% block title %}{{ title }} · Agatha Souza Studio{% endblock %}
+
+{% block content %}
+  {{ page_header(title, project.name if project else "Defina o essencial; sessões e referências são adicionadas depois.") }}
+
+  {% if not form.client_id.choices %}
+  <section class="panel">
+    <div class="empty">
+      <p class="empty-title">Cadastre um cliente primeiro</p>
+      <p class="empty-text">Todo projeto pertence a um cliente.</p>
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('clients.create') }}">Cadastrar cliente</a>
+    </div>
+  </section>
+  {% else %}
+  <section class="panel">
+    <form class="panel-body" method="post" novalidate>
+      {{ form.hidden_tag() }}{{ form_errors(form) }}
+      <div class="form-grid">
+        {{ field(form.client_id) }}
+        {{ field(form.name, autofocus=true, autocomplete="off") }}
+        {{ field(form.style) }}
+        {{ field(form.body_region_id) }}
+        {{ field(form.size, placeholder="Ex.: 15 cm", autocomplete="off") }}
+        {{ field(form.price_cents, inputmode="decimal", placeholder="0,00", autocomplete="off") }}
+        {{ field(form.status) }}
+        {{ field(form.description, span=2, rows=3, help="Ideia, composição, elementos, referências em texto.") }}
+        {{ field(form.notes, span=2, rows=3) }}
+      </div>
+      <div class="form-actions">
+        <a class="btn btn-ghost" href="{{ url_for('projects.detail', project_id=project.id) if project else url_for('projects.index') }}">Cancelar</a>
+        <button class="btn btn-primary" type="submit">{{ "Salvar alterações" if project else "Criar projeto" }}</button>
+      </div>
+    </form>
+  </section>
+  {% endif %}
+{% endblock %}

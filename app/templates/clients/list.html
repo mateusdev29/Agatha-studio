@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import icon, page_header, empty_state, badge, pagination %}
+{% block title %}Clientes · Agatha Souza Studio{% endblock %}
+
+{% block content %}
+  {% call page_header("Clientes", "Quem passa pelo estúdio, com todo o histórico em um só lugar.") %}
+    <a class="btn btn-primary" href="{{ url_for('clients.create') }}">{{ icon("plus", 18) }} Novo cliente</a>
+  {% endcall %}
+
+  <section class="panel">
+    <form class="toolbar" method="get" action="{{ url_for('clients.index') }}" role="search" data-no-loading>
+      <input class="input grow" type="search" name="q" value="{{ q }}" placeholder="Buscar cliente" aria-label="Buscar por nome, telefone, e-mail ou Instagram" title="Busca por nome, telefone, e-mail ou Instagram" maxlength="100">
+      <select class="select" name="status" aria-label="Situação">
+        <option value="ativos"{% if status == "ativos" %} selected{% endif %}>Ativos</option>
+        <option value="arquivados"{% if status == "arquivados" %} selected{% endif %}>Arquivados</option>
+        <option value="todos"{% if status == "todos" %} selected{% endif %}>Todos</option>
+      </select>
+      <button class="btn btn-ghost" type="submit">Filtrar</button>
+      <span class="toolbar-count">{{ clients.total }} {{ "cliente" if clients.total == 1 else "clientes" }}</span>
+    </form>
+
+    {% if clients.items %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Nome</th><th>Telefone</th><th>Instagram</th><th>Cliente desde</th></tr></thead>
+          <tbody>
+            {% for c in clients.items %}
+            <tr>
+              <td class="cell-primary" data-label="Nome">
+                <a class="link-strong" href="{{ url_for('clients.detail', client_id=c.id) }}">{{ c.name }}</a>
+                {% if c.is_archived %} {{ badge("Arquivado") }}{% endif %}
+              </td>
+              <td data-label="Telefone">{{ c.phone or "—" }}</td>
+              <td data-label="Instagram">{% if c.instagram %}@{{ c.instagram }}{% else %}—{% endif %}</td>
+              <td data-label="Cliente desde">{{ c.created_at|local_date }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {{ pagination(clients, "clients.index", q=q, status=status) }}
+    {% elif q or status != "ativos" %}
+      {{ empty_state("users", "Nenhum cliente encontrado", "Tente outro termo de busca ou mude o filtro de situação.", "Limpar filtros", url_for('clients.index')) }}
+    {% else %}
+      {{ empty_state("users", "Nenhum cliente cadastrado ainda", "Cadastre o primeiro cliente para organizar projetos, agenda e orçamentos.", "Cadastrar cliente", url_for('clients.create')) }}
+    {% endif %}
+  </section>
+{% endblock %}

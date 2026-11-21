@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import page_header, badge, empty_state, pagination %}
+{% from "components/_forms.html" import form_errors %}
+{% block title %}{{ item.name }} · Agatha Souza Studio{% endblock %}
+{% block content %}
+  {% call page_header(item.name, item.category.name if item.category else "Sem categoria") %}
+    {% if item.is_low and item.is_active %}{{ badge("Estoque baixo", "warning") }}{% endif %}
+    {% if not item.is_active %}{{ badge("Arquivado") }}{% endif %}
+    <a class="btn btn-ghost" href="{{ url_for('stock.edit', item_id=item.id) }}">Editar</a>
+    {% if item.is_active %}
+    <form method="post" action="{{ url_for('stock.archive', item_id=item.id) }}" data-confirm="O produto some das listas, mas o histórico é preservado." data-confirm-title="Arquivar {{ item.name }}?" data-confirm-label="Arquivar">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-ghost" type="submit">Arquivar</button></form>
+    {% else %}
+    <form method="post" action="{{ url_for('stock.restore', item_id=item.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-primary" type="submit">Restaurar</button></form>
+    {% endif %}
+  {% endcall %}
+  <div class="split">
+    <div class="stack">
+      <section class="panel"><div class="panel-head"><h2 class="panel-title">Histórico</h2></div>
+        {% if history.items %}
+        <div class="table-wrap"><table class="table compact">
+          <thead><tr><th>Quando</th><th>Tipo</th><th class="num">Variação</th><th class="num">Saldo</th><th>Motivo</th></tr></thead>
+          <tbody>{% for m in history.items %}<tr>
+            <td class="cell-primary nowrap" data-label="Quando">{{ m.created_at|local_date }}</td><td data-label="Tipo">{{ m.type.label }}</td>
+            <td class="num" data-label="Variação">{{ "%+d"|format(m.delta) }}</td><td class="num" data-label="Saldo">{{ m.balance_after }}</td><td data-label="Motivo">{{ m.reason or "—" }}</td></tr>{% endfor %}</tbody></table></div>
+        {{ pagination(history, "stock.detail", item_id=item.id) }}
+        {% else %}{{ empty_state("box", "Sem movimentações", "As entradas, saídas e ajustes deste produto aparecem aqui.", compact=True) }}{% endif %}
+      </section>
+    </div>
+    <div class="stack">
+      <section class="panel"><div class="panel-head"><h2 class="panel-title">Saldo</h2></div>
+        <dl class="datalist">
+          <div><dt>Em estoque</dt><dd><strong>{{ item.quantity }} {{ item.unit }}</strong></dd></div>
+          <div><dt>Mínimo</dt><dd>{{ item.min_quantity }}</dd></div>
+          <div><dt>Custo unitário</dt><dd>{{ item.cost_cents|brl }}</dd></div>
+          <div><dt>Fornecedor</dt><dd>{{ item.supplier or "—" }}</dd></div>
+          <div><dt>Validade</dt><dd>{{ item.expires_on|date_br or "—" }}</dd></div>
+        </dl></section>
+      {% if item.is_active %}
+      <section class="panel"><div class="panel-head"><h2 class="panel-title">Movimentar</h2></div>
+        <form class="panel-body" method="post" action="{{ url_for('stock.move', item_id=item.id) }}" novalidate>
+          {{ form.hidden_tag() }}{{ form_errors(form) }}
+          <div class="field"><label for="type">Tipo</label><select class="select" id="type" name="type">{% for t in types %}<option value="{{ t.value }}">{{ t.label }}</option>{% endfor %}</select></div>
+          <div class="field"><label for="quantity">Quantidade</label><input class="input" id="quantity" name="quantity" type="number" min="0" required inputmode="numeric"><span class="field-help">Em “Ajuste”, informe o novo saldo total.</span></div>
+          <div class="field"><label for="reason">Motivo</label><input class="input" id="reason" name="reason" maxlength="200" autocomplete="off"></div>
+          <button class="btn btn-primary btn-block" type="submit">Registrar</button>
+        </form></section>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

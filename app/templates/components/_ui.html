@@ -1,0 +1,70 @@
+{# Componentes reutilizáveis (macros). Importar com:
+   {% from "components/_ui.html" import icon, page_header, ledger_item, empty_state, badge %} #}
+
+{% macro icon(name, size=20) -%}
+<svg class="icon" width="{{ size }}" height="{{ size }}" aria-hidden="true" focusable="false"><use href="#i-{{ name }}"/></svg>
+{%- endmacro %}
+
+{% macro page_header(title, subtitle=None) %}
+<header class="page-header">
+  <div>
+    <h1 class="page-title">{{ title }}</h1>
+    {% if subtitle %}<p class="page-subtitle">{{ subtitle }}</p>{% endif %}
+  </div>
+  {% if caller %}<div class="page-actions">{{ caller() }}</div>{% endif %}
+</header>
+{% endmacro %}
+
+{% macro ledger_item(label, value, note=None, money=False) %}
+<div class="ledger-item">
+  <p class="ledger-label">{{ label }}</p>
+  <p class="ledger-value{% if money %} is-money{% endif %}">{{ value }}</p>
+  {% if note %}<p class="ledger-note">{{ note }}</p>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro empty_state(icon_name, title, text, action_label=None, action_url=None, compact=False) %}
+<div class="empty{% if compact %} compact{% endif %}">
+  <span class="empty-icon">{{ icon(icon_name, 22) }}</span>
+  <p class="empty-title">{{ title }}</p>
+  <p class="empty-text">{{ text }}</p>
+  {% if action_label and action_url %}<a class="btn btn-ghost btn-sm" href="{{ action_url }}">{{ action_label }}</a>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro badge(text, tone="neutral") -%}
+<span class="badge badge-{{ tone }}">{{ text }}</span>
+{%- endmacro %}
+
+{# Paginação. Uso: {{ pagination(clients, "clients.index", q=q, status=status) }} #}
+{% macro pagination(pg, endpoint) %}
+{% if pg.pages > 1 %}
+<nav class="pagination" aria-label="Paginação">
+  {% if pg.has_prev %}<a class="page-link" href="{{ url_for(endpoint, page=pg.prev_num, **kwargs) }}" rel="prev">Anterior</a>{% endif %}
+  {% for n in pg.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=1) %}
+    {% if n is none %}<span class="page-gap" aria-hidden="true">…</span>
+    {% elif n == pg.page %}<span class="page-link is-current" aria-current="page">{{ n }}</span>
+    {% else %}<a class="page-link" href="{{ url_for(endpoint, page=n, **kwargs) }}">{{ n }}</a>{% endif %}
+  {% endfor %}
+  {% if pg.has_next %}<a class="page-link" href="{{ url_for(endpoint, page=pg.next_num, **kwargs) }}" rel="next">Próxima</a>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}
+
+{# Abas navegáveis por URL. tabs = [(chave, rótulo)]; Uso: {{ tab_nav(tabs, tab, "clients.detail", client_id=1) }} #}
+{% macro tab_nav(tabs, current, endpoint) %}
+<nav class="tabs" aria-label="Seções">
+  {% for key, label in tabs %}
+  <a class="tab" href="{{ url_for(endpoint, aba=key, **kwargs) }}"{% if key == current %} aria-current="page"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</nav>
+{% endmacro %}
+
+{# Painel de gráfico. cfg = dict serializável (ver static/js/charts.js); sem dados mostra estado vazio. #}
+{% macro chart_panel(title, cfg, ok, empty_text="Sem dados no período.") %}
+<section class="panel">
+  <div class="panel-head"><h2 class="panel-title">{{ title }}</h2></div>
+  {% if ok %}<div class="chart-box"><canvas role="img" aria-label="Gráfico: {{ title }}" data-chart='{{ cfg|tojson }}'></canvas></div>
+  {% else %}{{ empty_state("chart", "Sem dados", empty_text, compact=True) }}{% endif %}
+</section>
+{% endmacro %}

@@ -1,0 +1,14 @@
+{# Filtro de período. Uso: {{ period_filter("finance.index", period, aba=aba) }} #}
+{% macro period_filter(endpoint, period) %}
+<form class="toolbar" method="get" action="{{ url_for(endpoint) }}" data-no-loading aria-label="Filtro de período">
+  {% for k, v in kwargs.items() %}{% if v %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
+  <select class="select" name="periodo" aria-label="Período">
+    {% for key, label in presets %}<option value="{{ key }}"{% if period.key == key %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    {% if period.key == "custom" %}<option value="" selected>Personalizado</option>{% endif %}
+  </select>
+  <input class="input" type="date" name="de" value="{{ period.start.isoformat() if period.key == 'custom' else '' }}" aria-label="De">
+  <input class="input" type="date" name="ate" value="{{ period.end.isoformat() if period.key == 'custom' else '' }}" aria-label="Até">
+  <button class="btn btn-ghost" type="submit">Aplicar</button>
+  <span class="toolbar-count">{{ period.label }}</span>
+</form>
+{% endmacro %}

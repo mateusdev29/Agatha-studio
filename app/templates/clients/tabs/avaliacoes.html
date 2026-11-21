@@ -1,0 +1,17 @@
+{% from "components/_ui.html" import empty_state, badge %}
+<section class="panel">
+  <div class="panel-head"><h2 class="panel-title">Avaliações</h2>{% if not client.is_archived %}<a class="btn btn-ghost btn-sm" href="{{ url_for('satisfaction.create', cliente=client.id) }}">Nova avaliação</a>{% endif %}</div>
+  {% if items %}
+    <ul class="rows">
+      {% for e in items %}
+      <li class="row">
+        <div class="row-when"><strong>{{ e.score }}/10</strong><span>{{ e.evaluated_on|date_br }}</span></div>
+        <div class="row-main"><p class="row-title">{{ e.comment or "Sem comentário" }}</p></div>
+        {{ badge("Promotor", "success") if e.score >= 9 else badge("Neutro") if e.score >= 7 else badge("Detrator", "danger") }}
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {{ empty_state("star", "Nenhuma avaliação", "As notas e comentários deste cliente aparecem aqui.") }}
+  {% endif %}
+</section>

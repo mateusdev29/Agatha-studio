@@ -149,4 +149,3 @@ Fontes: Bodoni Moda e Instrument Sans (SIL OFL, em `static/fonts`). Gráficos: C
 - O sinal é lançado por ação sua (botão no atendimento), não automaticamente; só o sinal tem vínculo com a Agenda (o pagamento do restante é lançado no Financeiro).
 - Não há envio de e-mail/WhatsApp nem link público de anamnese (a estrutura de token existe no modelo, sem rota).
 - Sem integração com o site público (a separação entre os sistemas foi mantida de propósito).
-

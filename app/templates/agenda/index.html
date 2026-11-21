@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import icon, page_header, empty_state, badge %}
+{% block title %}Agenda · Agatha Souza Studio{% endblock %}
+
+{% macro chip(a) -%}
+<a class="chip chip-{{ a.status|tone }}{% if a.status.value in ('cancelado', 'remarcado') %} is-off{% endif %}"
+   href="{{ url_for('agenda.detail', appt_id=a.id) }}" title="{{ a.client.name }}: {{ a.status.label }}">
+  <span class="chip-time">{{ a.starts_at.strftime("%H:%M") }}</span>{{ a.client.name.split()[0] }}
+</a>
+{%- endmacro %}
+
+{% macro day_url(d) %}{{ url_for('agenda.index', vista='dia', data=d.isoformat()) }}{% endmacro %}
+
+{% block content %}
+  {% call page_header("Agenda", cal.title) %}
+    <a class="btn btn-primary" href="{{ url_for('agenda.create', data=anchor.isoformat()) }}">{{ icon("plus", 18) }} Novo atendimento</a>
+  {% endcall %}
+
+  <div class="cal-bar">
+    <div class="cal-nav">
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('agenda.index', vista=view, data=cal.prev.isoformat()) }}" rel="prev">Anterior</a>
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('agenda.index', vista=view, data=today.isoformat()) }}">Hoje</a>
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('agenda.index', vista=view, data=cal.next.isoformat()) }}" rel="next">Próximo</a>
+    </div>
+    <nav class="segmented" aria-label="Tipo de visão">
+      {% for key, label in (("dia", "Dia"), ("semana", "Semana"), ("mes", "Mês")) %}
+      <a href="{{ url_for('agenda.index', vista=key, data=anchor.isoformat()) }}"{% if key == view %} aria-current="page"{% endif %}>{{ label }}</a>
+      {% endfor %}
+    </nav>
+  </div>
+
+  {% if view == "dia" %}
+    {% set day = cal.days[0] %}
+    <section class="panel">
+      {% if day.items %}
+      <ul class="rows">
+        {% for a in day.items %}
+        <li class="row{% if a.status.value in ('cancelado', 'remarcado') %} is-off{% endif %}">
+          <div class="row-when"><strong>{{ a.starts_at.strftime("%H:%M") }}</strong><span>até {{ a.ends_at.strftime("%H:%M") }}</span></div>
+          <div class="row-main">
+            <p class="row-title"><a class="link-strong" href="{{ url_for('agenda.detail', appt_id=a.id) }}">{{ a.client.name }}</a></p>
+            <p class="row-sub">{{ a.service or "Atendimento" }}{% if a.project %} · {{ a.project.name }}{% endif %}</p>
+          </div>
+          {{ badge(a.status.label, a.status|tone) }}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+        {{ empty_state("calendar", "Dia livre", "Nenhum atendimento neste dia.", "Agendar atendimento", url_for('agenda.create', data=day.date.isoformat())) }}
+      {% endif %}
+    </section>
+
+  {% elif view == "semana" %}
+    <section class="week" aria-label="Semana">
+      {% for d in cal.days %}
+      <div class="day-col{% if d.is_today %} is-today{% endif %}">
+        <a class="day-head" href="{{ day_url(d.date) }}"><span class="day-name">{{ weekdays[d.date.weekday()] }}</span><span class="day-num">{{ d.date.day }}</span></a>
+        {% for a in d.items %}{{ chip(a) }}{% else %}<p class="day-empty">Sem atendimentos</p>{% endfor %}
+      </div>
+      {% endfor %}
+    </section>
+
+  {% else %}
+    <section class="month" aria-label="Mês">
+      {% for w in weekdays %}<div class="month-head">{{ w }}</div>{% endfor %}
+      {% for d in cal.days %}
+      <div class="mcell{% if not d.in_range %} out{% endif %}{% if d.is_today %} is-today{% endif %}">
+        <a class="mcell-num" href="{{ day_url(d.date) }}">{{ d.date.day }}</a>
+        {% for a in d.items[:3] %}{{ chip(a) }}{% endfor %}
+        {% if d.items|length > 3 %}<a class="more" href="{{ day_url(d.date) }}">+{{ d.items|length - 3 }} mais</a>{% endif %}
+        {% if d.items %}<span class="mcell-count" aria-label="{{ d.items|length }} atendimentos">{{ d.items|length }}</span>{% endif %}
+      </div>
+      {% endfor %}
+    </section>
+  {% endif %}
+{% endblock %}

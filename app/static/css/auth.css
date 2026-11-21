@@ -1,0 +1,17 @@
+.auth-page { min-height: 100vh; display: grid; place-items: center; padding: var(--space-5); }
+.auth-card { width: 100%; max-width: 420px; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-lg); box-shadow: var(--shadow-float); padding: var(--space-7) var(--space-6); }
+.auth-brand { text-align: center; }
+.auth-brand .wordmark { color: var(--color-ink); font-size: 24px; }
+.auth-brand .wordmark-sub { color: var(--color-accent); font-size: 15px; }
+.auth-rule { width: 40px; height: 1px; margin: var(--space-5) auto; border: 0; background: var(--color-line); }
+.auth-title { text-align: center; font-size: var(--text-xl); color: var(--color-graphite); margin-bottom: var(--space-5); }
+.auth-note { margin-top: var(--space-5); text-align: center; font-size: var(--text-sm); color: var(--color-muted); }
+.auth-actions { display: grid; gap: var(--space-3); margin-top: var(--space-5); }
+
+.flashes { display: grid; gap: var(--space-2); margin-bottom: var(--space-4); }
+.flash { padding: 12px 14px; border-radius: var(--radius-sm); font-size: 14px; }
+.flash-success { background: var(--color-success-soft); color: var(--color-success); }
+.flash-error { background: var(--color-danger-soft); color: var(--color-danger); }
+.flash-info { background: var(--color-accent-soft); color: var(--color-accent); }
+
+@media (max-width: 480px) { .auth-card { padding: var(--space-6) var(--space-5); } }

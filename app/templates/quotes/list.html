@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import icon, page_header, empty_state, badge, pagination %}
+{% block title %}Orçamentos · Agatha Souza Studio{% endblock %}
+
+{% block content %}
+  {% call page_header("Orçamentos", "Propostas enviadas, em análise e aprovadas.") %}
+    <a class="btn btn-primary" href="{{ url_for('quotes.create') }}">{{ icon("plus", 18) }} Novo orçamento</a>
+  {% endcall %}
+
+  <section class="panel">
+    <form class="toolbar" method="get" action="{{ url_for('quotes.index') }}" role="search" data-no-loading>
+      <input class="input grow" type="search" name="q" value="{{ q }}" placeholder="Buscar orçamento" maxlength="100"
+             aria-label="Buscar por cliente, descrição ou estilo" title="Busca por cliente, descrição ou estilo">
+      <select class="select" name="status" aria-label="Status">
+        <option value="">Todos os status</option>
+        {% for s in statuses %}<option value="{{ s.value }}"{% if status == s.value %} selected{% endif %}>{{ s.label }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-ghost" type="submit">Filtrar</button>
+      <span class="toolbar-count">{{ quotes.total }} {{ "orçamento" if quotes.total == 1 else "orçamentos" }}</span>
+    </form>
+
+    {% if quotes.items %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Cliente</th><th>Descrição</th><th class="num">Valor</th><th>Validade</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for qt in quotes.items %}
+            <tr>
+              <td class="cell-primary" data-label="Cliente"><a class="link-strong" href="{{ url_for('quotes.detail', quote_id=qt.id) }}">{{ qt.client.name }}</a></td>
+              <td data-label="Descrição">{{ qt.description|truncate(60) }}</td>
+              <td class="num nowrap" data-label="Valor">{{ qt.price_cents|brl }}</td>
+              <td class="nowrap" data-label="Validade">{{ qt.valid_until|date_br or "—" }}</td>
+              <td data-label="Status">{{ badge(qt.status.label, qt.status|tone) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {{ pagination(quotes, "quotes.index", q=q, status=status) }}
+    {% elif q or status %}
+      {{ empty_state("file", "Nenhum orçamento encontrado", "Tente outro termo de busca ou limpe o filtro de status.", "Limpar filtros", url_for('quotes.index')) }}
+    {% else %}
+      {{ empty_state("file", "Nenhum orçamento ainda", "Crie o primeiro orçamento; ao ser aprovado, ele vira um projeto com um clique.", "Criar orçamento", url_for('quotes.create')) }}
+    {% endif %}
+  </section>
+{% endblock %}

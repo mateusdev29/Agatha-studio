@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import icon, page_header, badge, tab_nav %}
+{% block title %}{{ client.name }} · Agatha Souza Studio{% endblock %}
+
+{% block content %}
+  {% call page_header(client.name, "Cliente desde " ~ (client.created_at|local_date)) %}
+    <a class="btn btn-ghost" href="{{ url_for('clients.edit', client_id=client.id) }}">Editar</a>
+    {% if client.is_archived %}
+      <form method="post" action="{{ url_for('clients.restore', client_id=client.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-primary" type="submit">Restaurar</button>
+      </form>
+    {% else %}
+      <form method="post" action="{{ url_for('clients.archive', client_id=client.id) }}"
+            data-confirm="O cliente deixa de aparecer nas listas, mas projetos, pagamentos e anamnese continuam guardados. Você pode restaurá-lo depois."
+            data-confirm-title="Arquivar {{ client.name }}?" data-confirm-label="Arquivar">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-ghost" type="submit">Arquivar</button>
+      </form>
+    {% endif %}
+  {% endcall %}
+
+  {% if client.is_archived %}
+    <div class="banner" role="status"><span>Este cliente está arquivado desde {{ client.archived_at|local_date }}.</span></div>
+  {% endif %}
+
+  {{ tab_nav(tabs, tab, "clients.detail", client_id=client.id) }}
+  {% include "clients/tabs/" ~ tab ~ ".html" %}
+{% endblock %}

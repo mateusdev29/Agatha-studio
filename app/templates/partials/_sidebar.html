@@ -1,0 +1,27 @@
+{% from "components/_ui.html" import icon %}
+<aside class="sidebar" id="sidebar" aria-label="Menu lateral">
+  <div class="sidebar-head">
+    <div>
+      <div class="wordmark">AGATHA SOUZA</div>
+      <div class="wordmark-sub">Studio</div>
+      <div class="wordmark-mono" aria-hidden="true">AS</div>
+    </div>
+    <button type="button" class="icon-btn sidebar-close" data-drawer-close aria-label="Fechar menu">{{ icon("x") }}</button>
+  </div>
+
+  <nav class="nav" aria-label="Principal">
+    {% for group in nav_groups %}
+    <ul class="nav-group">
+      {% for item in group %}
+      <li>
+        <a class="nav-link" href="{{ item.path }}" title="{{ item.label }}"{% if item.active %} aria-current="page"{% endif %}>
+          {{ icon(item.icon) }}<span class="nav-label">{{ item.label }}</span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endfor %}
+  </nav>
+
+  <p class="sidebar-foot">Gestão do Estúdio</p>
+</aside>

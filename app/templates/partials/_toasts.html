@@ -1,0 +1,11 @@
+{% from "components/_ui.html" import icon %}
+<div class="toasts" id="toasts" role="region" aria-label="Avisos">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="toast toast-{{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}"{% if category != 'error' %} data-autodismiss{% endif %}>
+      <p class="toast-message">{{ message }}</p>
+      <button type="button" class="toast-close" data-toast-close aria-label="Fechar aviso">{{ icon("x", 14) }}</button>
+    </div>
+    {% endfor %}
+  {% endwith %}
+</div>

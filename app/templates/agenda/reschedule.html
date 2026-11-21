@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import page_header %}
+{% from "components/_forms.html" import field, form_errors %}
+{% block title %}Remarcar atendimento · Agatha Souza Studio{% endblock %}
+
+{% block content %}
+  {{ page_header("Remarcar atendimento", appt.client.name ~ ", hoje marcado para " ~ (appt.starts_at|date_br) ~ " às " ~ appt.starts_at.strftime("%H:%M")) }}
+  <section class="panel">
+    <form class="panel-body" method="post" novalidate>
+      {{ form.hidden_tag() }}{{ form_errors(form) }}
+      <div class="form-grid">
+        {{ field(form.date, autofocus=true) }}
+        {{ field(form.time) }}
+        {{ field(form.duration_minutes, type="number", min=15, max=720, step=15) }}
+      </div>
+      <p class="muted help-text">O horário atual fica no histórico como “remarcado” e o novo precisa de confirmação.</p>
+      <div class="form-actions">
+        <a class="btn btn-ghost" href="{{ url_for('agenda.detail', appt_id=appt.id) }}">Cancelar</a>
+        <button class="btn btn-primary" type="submit">Remarcar</button>
+      </div>
+    </form>
+  </section>
+{% endblock %}

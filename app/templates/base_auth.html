@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}Agatha Souza Studio{% endblock %}</title>
+  {% for css in ("fonts", "tokens", "base", "components", "auth") %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/' ~ css ~ '.css') }}">
+  {% endfor %}
+</head>
+<body>
+  <main class="auth-page">
+    <section class="auth-card">
+      <header class="auth-brand">
+        <div class="wordmark">AGATHA SOUZA</div>
+        <div class="wordmark-sub">Tattoo Studio</div>
+        <hr class="auth-rule">
+      </header>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flashes" role="status">
+            {% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='js/ui.js') }}" defer></script>
+</body>
+</html>

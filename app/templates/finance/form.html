@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import page_header %}
+{% from "components/_forms.html" import field, form_errors %}
+{% set income = kind.value == "receita" %}
+{% set title = ("Editar " if item else "Nova ") ~ ("receita" if income else "despesa") %}
+{% block title %}{{ title }} · Agatha Souza Studio{% endblock %}
+
+{% block content %}
+  {{ page_header(title, item.description if item else None) }}
+  {% if item and item.is_deposit and item.appointment %}
+  <div class="banner" role="status"><span>Sinal do atendimento de {{ item.appointment.starts_at|date_br }}. Alterar o valor aqui atualiza o atendimento; cliente e projeto seguem o atendimento.</span>
+    <a class="link-strong" href="{{ url_for('agenda.detail', appt_id=item.appointment_id) }}">Ver atendimento</a></div>
+  {% endif %}
+  <section class="panel">
+    <form class="panel-body" method="post" novalidate>
+      {{ form.hidden_tag() }}{{ form_errors(form) }}
+      <div class="form-grid">
+        {{ field(form.description, span=2, autofocus=true, autocomplete="off") }}
+        {{ field(form.amount_cents, inputmode="decimal", placeholder="0,00", autocomplete="off") }}
+        {{ field(form.date) }}
+        {{ field(form.category_id) }}
+        {{ field(form.payment_method) }}
+        {{ field(form.status) }}
+        {% if income %}
+          {{ field(form.client_id) }}
+          {{ field(form.project_id, **{"data-depends-on": "client_id"}) }}
+        {% else %}
+          {{ field(form.supplier, autocomplete="off") }}
+        {% endif %}
+        {{ field(form.notes, span=2, rows=3) }}
+      </div>
+      <div class="form-actions">
+        <a class="btn btn-ghost" href="{{ url_for('finance.index', aba='receitas' if income else 'despesas') }}">Cancelar</a>
+        <button class="btn btn-primary" type="submit">{{ "Salvar alterações" if item else "Registrar" }}</button>
+      </div>
+    </form>
+    {% if item %}
+    <form class="upload-row" method="post" action="{{ url_for('finance.delete', item_id=item.id) }}" data-confirm="Esta ação não pode ser desfeita." data-confirm-title="Excluir lançamento?" data-confirm-label="Excluir" data-confirm-tone="danger">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-ghost btn-sm" type="submit">Excluir lançamento</button>
+    </form>
+    {% endif %}
+  </section>
+{% endblock %}

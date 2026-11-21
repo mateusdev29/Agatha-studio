@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import page_header %}
+{% from "components/_forms.html" import field, form_errors %}
+{% set title = "Editar orçamento" if quote else "Novo orçamento" %}
+{% block title %}{{ title }} · Agatha Souza Studio{% endblock %}
+
+{% block content %}
+  {{ page_header(title, quote.client.name if quote else "Nasce como rascunho; você decide quando enviar.") }}
+
+  {% if not form.client_id.choices %}
+  <section class="panel"><div class="empty">
+    <p class="empty-title">Cadastre um cliente primeiro</p>
+    <p class="empty-text">Todo orçamento é feito para um cliente.</p>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('clients.create') }}">Cadastrar cliente</a>
+  </div></section>
+  {% else %}
+  <section class="panel">
+    <form class="panel-body" method="post" novalidate>
+      {{ form.hidden_tag() }}{{ form_errors(form) }}
+      <div class="form-grid">
+        {{ field(form.client_id, span=2) }}
+        {{ field(form.description, span=2, rows=4, autofocus=true, help="Descreva a ideia. Este texto vai na mensagem ao cliente.") }}
+        {{ field(form.style) }}
+        {{ field(form.body_region_id) }}
+        {{ field(form.size, placeholder="Ex.: 15 cm", autocomplete="off") }}
+        {{ field(form.price_cents, inputmode="decimal", placeholder="0,00", autocomplete="off") }}
+        {{ field(form.valid_until) }}
+        {{ field(form.notes, span=2, rows=3, help="Só para você: não aparece na mensagem ao cliente.") }}
+      </div>
+      <div class="form-actions">
+        <a class="btn btn-ghost" href="{{ url_for('quotes.detail', quote_id=quote.id) if quote else url_for('quotes.index') }}">Cancelar</a>
+        <button class="btn btn-primary" type="submit">{{ "Salvar alterações" if quote else "Criar orçamento" }}</button>
+      </div>
+    </form>
+  </section>
+  {% endif %}
+{% endblock %}

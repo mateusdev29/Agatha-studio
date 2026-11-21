@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import icon, page_header, ledger_item, empty_state, badge %}
+{% block title %}Guia de componentes · Agatha Souza Studio{% endblock %}
+
+{% block content %}
+  {% call page_header("Guia de componentes", "Página de desenvolvimento: não existe em produção.") %}
+    <button type="button" class="btn btn-primary" data-modal-open="demo-modal">{{ icon("plus", 18) }} Novo item</button>
+  {% endcall %}
+
+  <section class="panel">
+    <div class="panel-head"><h2 class="panel-title">Botões e selos</h2></div>
+    <div class="panel-body">
+      <div class="page-actions">
+        <button class="btn btn-primary" type="button">Primário</button>
+        <button class="btn btn-accent" type="button">Destaque</button>
+        <button class="btn btn-ghost" type="button">Secundário</button>
+        <button class="btn btn-danger" type="button">Excluir</button>
+        <button class="btn btn-primary is-loading" type="button">Salvando</button>
+      </div>
+      <div class="page-actions section-gap">
+        {{ badge("Neutro") }} {{ badge("Confirmado", "success") }} {{ badge("Aguardando", "warning") }}
+        {{ badge("Cancelado", "danger") }} {{ badge("Remarcado", "accent") }}
+      </div>
+    </div>
+  </section>
+
+  <section class="ledger cols-2 section-gap">
+    {{ ledger_item("Indicador", "128", "nota de apoio") }}
+    {{ ledger_item("Valor", "R$ 12.450,00", "mês atual", money=True) }}
+  </section>
+
+  <section class="panel section-gap">
+    <div class="panel-head"><h2 class="panel-title">Formulário (2 colunas → 1 no celular)</h2></div>
+    <div class="panel-body">
+      <form method="post" data-no-loading>
+        <div class="form-grid">
+          <div class="field"><label for="f-nome">Nome</label><input class="input" id="f-nome" placeholder="Nome completo"></div>
+          <div class="field has-error"><label for="f-tel">Telefone</label><input class="input" id="f-tel" value="12"><span class="field-error">Informe um telefone válido.</span></div>
+          <div class="field"><label for="f-sel">Estilo</label><select class="select" id="f-sel"><option>Fine line</option><option>Blackwork</option></select></div>
+          <div class="field"><label for="f-data">Data</label><input class="input" id="f-data" type="date"></div>
+          <div class="field span-2"><label for="f-obs">Observações</label><textarea class="textarea" id="f-obs"></textarea><span class="field-help">Visível só para você.</span></div>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section class="panel section-gap">
+    <div class="panel-head"><h2 class="panel-title">Tabela (vira cartões no celular)</h2></div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Cliente</th><th>Estilo</th><th>Status</th><th class="num">Valor</th></tr></thead>
+        <tbody>
+          <tr><td data-label="Cliente">Marina Lopes</td><td data-label="Estilo">Fine line</td><td data-label="Status">{{ badge("Aprovado", "success") }}</td><td class="num" data-label="Valor">R$ 1.200,00</td></tr>
+          <tr><td data-label="Cliente">Caio Ferraz</td><td data-label="Estilo">Blackwork</td><td data-label="Status">{{ badge("Orçamento", "warning") }}</td><td class="num" data-label="Valor">R$ 850,00</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel section-gap">
+    <div class="panel-head"><h2 class="panel-title">Avisos, confirmação e estado vazio</h2></div>
+    <div class="panel-body">
+      <div class="page-actions">
+        <button class="btn btn-ghost" type="button" data-toast-message="Cliente salvo com sucesso." data-toast-tone="success">Aviso de sucesso</button>
+        <button class="btn btn-ghost" type="button" data-toast-message="Não foi possível salvar. Verifique os campos." data-toast-tone="error">Aviso de erro</button>
+        <form method="post" action="/_ui" data-confirm="Esta ação não pode ser desfeita." data-confirm-title="Excluir cliente?" data-confirm-label="Excluir" data-confirm-tone="danger" data-no-loading>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-danger" type="submit">Excluir com confirmação</button>
+        </form>
+      </div>
+    </div>
+    {{ empty_state("inbox", "Nada por aqui ainda", "Este é o estado vazio padrão, com uma ação clara.", "Criar o primeiro", "#") }}
+  </section>
+
+  <dialog class="modal" id="demo-modal" aria-labelledby="demo-title">
+    <div class="modal-head"><h2 class="modal-title" id="demo-title">Novo item</h2></div>
+    <div class="modal-body"><div class="field"><label for="m-nome">Nome</label><input class="input" id="m-nome"></div></div>
+    <div class="modal-foot">
+      <button type="button" class="btn btn-ghost" data-modal-close>Cancelar</button>
+      <button type="button" class="btn btn-primary" data-modal-close>Salvar</button>
+    </div>
+  </dialog>
+{% endblock %}

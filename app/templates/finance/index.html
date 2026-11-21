@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import icon, page_header, ledger_item, empty_state, badge, pagination, tab_nav %}
+{% from "components/_period.html" import period_filter %}
+{% block title %}Financeiro · Agatha Souza Studio{% endblock %}
+
+{% block content %}
+  {% call page_header("Financeiro", "Receitas, despesas e o que ainda falta receber.") %}
+    <a class="btn btn-primary" href="{{ url_for('finance.create', kind='receitas') }}">{{ icon("plus", 18) }} Nova receita</a>
+    <a class="btn btn-ghost" href="{{ url_for('finance.create', kind='despesas') }}">Nova despesa</a>
+  {% endcall %}
+
+  <section class="panel section-gap-0">{{ period_filter("finance.index", period, aba=tab if tab != "todos" else "") }}</section>
+
+  <section class="ledger section-gap" aria-label="Resumo do período">
+    {{ ledger_item("Receitas", summary.income|brl, "pagas no período", money=True) }}
+    {{ ledger_item("Despesas", summary.expense|brl, "pagas no período", money=True) }}
+    {{ ledger_item("Lucro", summary.profit|brl, "receitas menos despesas", money=True) }}
+    {{ ledger_item("A receber", summary.pending_in|brl, ("A pagar: " ~ (summary.pending_out|brl)), money=True) }}
+  </section>
+
+  <div class="section-gap">{{ tab_nav(tabs, tab, "finance.index", **period.args) }}</div>
+
+  {% if tab == "categorias" %}
+  <section class="panel">
+    {% if breakdown %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Categoria</th><th>Tipo</th><th class="num">Total pago</th></tr></thead>
+      <tbody>{% for kind, name, total in breakdown %}
+        <tr><td class="cell-primary" data-label="Categoria">{{ name }}</td><td data-label="Tipo">{{ badge(kind.label, "success" if kind.value == "receita" else "neutral") }}</td><td class="num" data-label="Total pago">{{ total|brl }}</td></tr>
+      {% endfor %}</tbody></table></div>
+    <p class="panel-body muted help-line">As categorias são gerenciadas em <a class="link-strong" href="{{ url_for('settings.categories', group='financeiras') }}">Configurações</a>.</p>
+    {% else %}{{ empty_state("wallet", "Sem movimentações pagas", "Nenhum lançamento pago neste período.", compact=True) }}{% endif %}
+  </section>
+  {% else %}
+  <section class="panel">
+    <form class="toolbar" method="get" action="{{ url_for('finance.index') }}" role="search" data-no-loading>
+      <input type="hidden" name="aba" value="{{ tab }}">
+      {% for k, v in period.args.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+      <input class="input grow" type="search" name="q" value="{{ q }}" placeholder="Buscar lançamento" maxlength="100" aria-label="Buscar por descrição, cliente ou fornecedor">
+      <select class="select" name="status" aria-label="Situação"><option value="">Todas as situações</option>
+        {% for s in statuses %}<option value="{{ s.value }}"{% if status == s.value %} selected{% endif %}>{{ s.label }}</option>{% endfor %}</select>
+      <button class="btn btn-ghost" type="submit">Filtrar</button>
+      <span class="toolbar-count">{{ items.total }} {{ "lançamento" if items.total == 1 else "lançamentos" }}</span>
+    </form>
+    {% if items.items %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Descrição</th><th>Data</th><th>Categoria</th><th>Cliente / fornecedor</th><th class="num">Valor</th><th>Situação</th><th><span class="visually-hidden">Ações</span></th></tr></thead>
+      <tbody>{% for t in items.items %}
+        <tr>
+          <td class="cell-primary" data-label="Descrição"><a class="link-strong" href="{{ url_for('finance.edit', item_id=t.id) }}">{{ t.description }}</a>{% if t.is_deposit %} {{ badge("Sinal", "accent") }}{% endif %}</td>
+          <td class="nowrap" data-label="Data">{{ t.date|date_br }}</td>
+          <td data-label="Categoria">{{ t.category.name if t.category else "—" }}</td>
+          <td data-label="Cliente / fornecedor">{{ (t.client.name if t.client else t.supplier) or "—" }}</td>
+          <td class="num nowrap {{ 'amount-in' if t.type.value == 'receita' else 'amount-out' }}" data-label="Valor">{{ "+" if t.type.value == "receita" else "−" }} {{ t.amount_cents|brl }}</td>
+          <td data-label="Situação">{{ badge(t.status.label, t.status|tone) }}</td>
+          <td data-label="Ações"><div class="row-actions">
+            {% if t.status.value == "pendente" %}<form method="post" action="{{ url_for('finance.pay', item_id=t.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-ghost btn-sm" type="submit">Marcar pago</button></form>{% endif %}
+          </div></td>
+        </tr>{% endfor %}</tbody></table></div>
+    {{ pagination(items, "finance.index", aba=tab, q=q, status=status, **period.args) }}
+    {% elif q or status %}{{ empty_state("wallet", "Nenhum lançamento encontrado", "Tente outro termo ou limpe os filtros.", "Limpar filtros", url_for('finance.index', aba=tab, **period.args)) }}
+    {% else %}{{ empty_state("wallet", "Nenhum lançamento neste período", "Registre receitas e despesas para acompanhar o caixa do estúdio.", "Nova receita", url_for('finance.create', kind='receitas')) }}{% endif %}
+  </section>
+  {% endif %}
+{% endblock %}

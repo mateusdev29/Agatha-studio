@@ -1,0 +1,29 @@
+{# Renderiza um campo WTForms com rótulo, ajuda e erros. Uso:
+   {% from "components/_forms.html" import field %}
+   {{ field(form.name, autofocus=true) }}  {{ field(form.notes, span=2) }} #}
+{% macro field(f, span=1, help=None) %}
+<div class="field{% if f.errors %} has-error{% endif %}{% if span == 2 %} span-2{% endif %}">
+  {{ f.label }}
+  {% if f.type in ("TextAreaField",) %}
+    {{ f(class="textarea", **kwargs) }}
+  {% elif f.type in ("SelectField",) %}
+    {{ f(class="select", **kwargs) }}
+  {% else %}
+    {{ f(class="input", **kwargs) }}
+  {% endif %}
+  {% if help %}<span class="field-help">{{ help }}</span>{% endif %}
+  {% for e in f.errors %}<span class="field-error">{{ e }}</span>{% endfor %}
+</div>
+{% endmacro %}
+
+
+{# Aviso no topo do formulário com TODOS os erros, inclusive de campos que a tela não exibe.
+   Garante que a usuária nunca fique sem saber por que o formulário não foi salvo. #}
+{% macro form_errors(form) %}
+{% if form.errors %}
+<div class="banner banner-error" role="alert">
+  <span><strong>Não foi possível salvar.</strong>
+  {% for name, errs in form.errors.items() %}{{ (form[name].label.text if name in form else name) }}: {{ errs|join(" ") }}{{ " " if not loop.last }}{% endfor %}</span>
+</div>
+{% endif %}
+{% endmacro %}

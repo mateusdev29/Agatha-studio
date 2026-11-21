@@ -1,0 +1,9 @@
+{% from "components/_ui.html" import empty_state %}
+<section class="panel">
+  {% if client.notes %}
+    <div class="panel-body"><p class="notes-text">{{ client.notes }}</p></div>
+    <div class="panel-body muted"><a class="link-strong" href="{{ url_for('clients.edit', client_id=client.id) }}">Editar observações</a></div>
+  {% else %}
+    {{ empty_state("file", "Sem observações", "Anote preferências, cuidados e combinados com este cliente.", "Adicionar observações", url_for('clients.edit', client_id=client.id)) }}
+  {% endif %}
+</section>

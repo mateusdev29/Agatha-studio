@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import page_header, chart_panel, empty_state %}
+{% from "components/_period.html" import period_filter %}
+{% block title %}Preferências Corporais · Agatha Souza Studio{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='vendor/chart.umd.js') }}" defer></script><script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>{% endblock %}
+
+{% macro zone(slug, el, attrs) -%}
+<{{ el }} class="zone heat-{{ heat.get(slug, 0) }}" data-region="{{ slug }}" {{ attrs|safe }}><title>{{ names[slug] }}: {{ counts.get(slug, 0) }} {{ "projeto" if counts.get(slug, 0) == 1 else "projetos" }}</title></{{ el }}>
+{%- endmacro %}
+
+{% block content %}
+  {{ page_header("Preferências Corporais", "Onde as tatuagens são feitas com mais frequência.") }}
+  <section class="panel">{{ period_filter("body.body_map", period) }}</section>
+
+  <div class="split section-gap">
+    <section class="panel"><div class="panel-head"><h2 class="panel-title">Mapa corporal</h2><span class="muted">{{ total }} {{ "projeto" if total == 1 else "projetos" }}</span></div>
+      <div class="panel-body">
+        <svg class="body-figure" viewBox="0 0 420 380" role="img" aria-label="Mapa corporal colorido pela quantidade de projetos em cada região">
+          <g>
+            {{ zone("cabeca", "circle", 'cx="100" cy="28" r="22"') }}{{ zone("pescoco", "rect", 'x="91" y="50" width="18" height="14" rx="4"') }}
+            {{ zone("ombro", "ellipse", 'cx="62" cy="76" rx="20" ry="13"') }}{{ zone("ombro", "ellipse", 'cx="138" cy="76" rx="20" ry="13"') }}
+            {{ zone("peito", "rect", 'x="70" y="66" width="60" height="44" rx="8"') }}{{ zone("abdomen", "rect", 'x="72" y="112" width="56" height="40" rx="8"') }}
+            {{ zone("quadril", "rect", 'x="68" y="154" width="64" height="30" rx="10"') }}
+            {{ zone("braco", "rect", 'x="34" y="90" width="22" height="58" rx="10"') }}{{ zone("braco", "rect", 'x="144" y="90" width="22" height="58" rx="10"') }}
+            {{ zone("antebraco", "rect", 'x="30" y="150" width="20" height="56" rx="9"') }}{{ zone("antebraco", "rect", 'x="150" y="150" width="20" height="56" rx="9"') }}
+            {{ zone("mao", "ellipse", 'cx="38" cy="218" rx="10" ry="13"') }}{{ zone("mao", "ellipse", 'cx="162" cy="218" rx="10" ry="13"') }}
+            {{ zone("coxa", "rect", 'x="70" y="186" width="28" height="78" rx="12"') }}{{ zone("coxa", "rect", 'x="102" y="186" width="28" height="78" rx="12"') }}
+            {{ zone("panturrilha", "rect", 'x="72" y="266" width="24" height="74" rx="11"') }}{{ zone("panturrilha", "rect", 'x="104" y="266" width="24" height="74" rx="11"') }}
+            {{ zone("pe", "ellipse", 'cx="84" cy="352" rx="15" ry="8"') }}{{ zone("pe", "ellipse", 'cx="116" cy="352" rx="15" ry="8"') }}
+            <text class="view-label" x="100" y="376">Frente</text>
+          </g>
+          <g transform="translate(220 0)">
+            <circle class="zone neutral" cx="100" cy="28" r="22"/><rect class="zone neutral" x="91" y="50" width="18" height="14" rx="4"/>
+            {{ zone("costas", "rect", 'x="62" y="66" width="76" height="118" rx="12"') }}
+            <rect class="zone neutral" x="34" y="90" width="22" height="116" rx="10"/><rect class="zone neutral" x="144" y="90" width="22" height="116" rx="10"/>
+            <rect class="zone neutral" x="70" y="186" width="28" height="154" rx="12"/><rect class="zone neutral" x="102" y="186" width="28" height="154" rx="12"/>
+            <text class="view-label" x="100" y="376">Costas</text>
+          </g>
+        </svg>
+      </div>
+      <div class="legend"><span>menos</span>{% for n in range(0, 6) %}<i class="heat-{{ n }}"></i>{% endfor %}<span>mais projetos</span></div>
+    </section>
+    <div class="stack">
+      {{ chart_panel("Regiões mais procuradas", chart, ranking, "Registre a região do corpo nos projetos para ver o ranking.") }}
+      <section class="panel"><div class="panel-head"><h2 class="panel-title">Estilos por região</h2></div>
+        {% if styles %}<div class="table-wrap"><table class="table compact"><thead><tr><th>Região</th><th>Estilos mais comuns</th></tr></thead><tbody>
+          {% for r in ranking %}{% if styles.get(r.slug) %}<tr><td class="cell-primary" data-label="Região">{{ r.name }}</td><td data-label="Estilos">{% for st, n in styles[r.slug][:3] %}{{ st }} ({{ n }}){{ ", " if not loop.last }}{% endfor %}</td></tr>{% endif %}{% endfor %}</tbody></table></div>
+        {% else %}{{ empty_state("body", "Sem dados", "Informe estilo e região nos projetos.", compact=True) }}{% endif %}
+      </section>
+    </div>
+  </div>
+{% endblock %}

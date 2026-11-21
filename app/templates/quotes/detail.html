@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import icon, page_header, badge %}
+{% block title %}Orçamento de {{ quote.client.name }} · Agatha Souza Studio{% endblock %}
+
+{% macro act(endpoint, label, kind="ghost", status=None, confirm=None, create_project=False) %}
+<form method="post" action="{{ url_for(endpoint, quote_id=quote.id) }}"
+      {% if confirm %}data-confirm="{{ confirm }}" data-confirm-title="{{ label }}?" data-confirm-label="{{ label }}"{% endif %}>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+  {% if create_project %}<input type="hidden" name="create_project" value="1">{% endif %}
+  <button class="btn btn-{{ kind }}" type="submit">{{ label }}</button>
+</form>
+{% endmacro %}
+
+{% block content %}
+  {% call page_header("Orçamento de " ~ quote.client.name, "Criado em " ~ (quote.created_at|local_date)) %}
+    {{ badge(quote.status.label, quote.status|tone) }}
+    {% if not locked %}<a class="btn btn-ghost" href="{{ url_for('quotes.edit', quote_id=quote.id) }}">Editar</a>{% endif %}
+  {% endcall %}
+
+  <div class="split">
+    <div class="stack">
+      <section class="panel">
+        <div class="panel-head"><h2 class="panel-title">Descrição</h2></div>
+        <div class="panel-body">
+          <p class="notes-text">{{ quote.description }}</p>
+          {% if quote.notes %}<p class="notes-text muted notes-gap">Obs. internas: {{ quote.notes }}</p>{% endif %}
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2 class="panel-title">Mensagem para o cliente</h2></div>
+        <div class="copy-box">
+          <textarea class="textarea" id="wa-text" readonly aria-label="Texto do orçamento para enviar">{{ message }}</textarea>
+          <button class="btn btn-ghost" type="button" data-copy-target="wa-text">{{ icon("file", 18) }} Copiar texto para WhatsApp</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="stack">
+      <section class="panel">
+        <div class="panel-head"><h2 class="panel-title">Andamento</h2></div>
+        <div class="action-stack">
+          {% if quote.project %}
+            <a class="btn btn-primary" href="{{ url_for('projects.detail', project_id=quote.project_id) }}">Ver projeto criado</a>
+            <p class="muted help-text">Com o projeto criado, este orçamento fica como registro e não pode ser alterado.</p>
+          {% elif quote.status == S.DRAFT %}
+            {{ act("quotes.change_status", "Marcar como enviado", "primary", "enviado") }}
+          {% elif quote.status == S.SENT %}
+            {{ act("quotes.approve", "Aprovar e criar projeto", "primary", create_project=True) }}
+            {{ act("quotes.approve", "Só aprovar", "ghost") }}
+            {{ act("quotes.change_status", "Aguardando resposta", "ghost", "aguardando_resposta") }}
+            {{ act("quotes.change_status", "Recusado pelo cliente", "ghost", "recusado", confirm="O orçamento será marcado como recusado.") }}
+          {% elif quote.status == S.WAITING %}
+            {{ act("quotes.approve", "Aprovar e criar projeto", "primary", create_project=True) }}
+            {{ act("quotes.approve", "Só aprovar", "ghost") }}
+            {{ act("quotes.change_status", "Recusado pelo cliente", "ghost", "recusado", confirm="O orçamento será marcado como recusado.") }}
+          {% elif quote.status == S.APPROVED %}
+            {{ act("quotes.create_project", "Criar projeto", "primary") }}
+          {% else %}
+            {{ act("quotes.change_status", "Reabrir como rascunho", "ghost", "rascunho") }}
+          {% endif %}
+          {% if not locked %}
+            {{ act("quotes.delete", "Excluir orçamento", "ghost", confirm="Esta ação não pode ser desfeita.") }}
+          {% endif %}
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2 class="panel-title">Detalhes</h2></div>
+        <dl class="datalist">
+          <div><dt>Cliente</dt><dd><a class="link-strong" href="{{ url_for('clients.detail', client_id=quote.client_id) }}">{{ quote.client.name }}</a></dd></div>
+          <div><dt>Valor</dt><dd>{{ quote.price_cents|brl }}</dd></div>
+          <div><dt>Validade</dt><dd>{{ quote.valid_until|date_br or "—" }}</dd></div>
+          <div><dt>Estilo</dt><dd>{{ quote.style or "—" }}</dd></div>
+          <div><dt>Região</dt><dd>{{ quote.body_region.name if quote.body_region else "—" }}</dd></div>
+          <div><dt>Tamanho</dt><dd>{{ quote.size or "—" }}</dd></div>
+        </dl>
+      </section>
+    </div>
+  </div>
+{% endblock %}

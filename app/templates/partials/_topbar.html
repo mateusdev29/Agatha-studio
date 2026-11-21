@@ -1,0 +1,57 @@
+{% from "components/_ui.html" import icon %}
+<header class="topbar">
+  <div class="topbar-start">
+    <button type="button" class="icon-btn menu-btn" data-drawer-toggle aria-controls="sidebar" aria-expanded="false" aria-label="Abrir menu">{{ icon("menu") }}</button>
+    <span class="topbar-brand">AGATHA SOUZA</span>
+  </div>
+
+  <div class="topbar-end">
+    <div class="dropdown" data-dropdown>
+      <button type="button" class="icon-btn" data-dropdown-trigger aria-expanded="false" aria-controls="notifications-panel"
+              aria-label="Notificações{% if notifications %}, {{ notifications|length }} pendentes{% endif %}">
+        {{ icon("bell") }}
+        {% if notifications %}<span class="count" aria-hidden="true">{{ 9 if notifications|length > 9 else notifications|length }}</span>{% endif %}
+      </button>
+      <div class="dropdown-panel" id="notifications-panel" data-dropdown-panel hidden>
+        <p class="dropdown-title">Notificações</p>
+        {% if notifications %}
+        <ul class="notice-list">
+          {% for n in notifications %}
+          <li>
+            <a class="notice" href="{{ n.path }}">
+              <span class="notice-icon tone-{{ n.tone }}">{{ icon(n.icon, 16) }}</span>
+              <span>
+                <span class="notice-title">{{ n.title }}</span><br>
+                <span class="notice-detail">{{ n.detail }}</span>
+              </span>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+          <div class="empty compact">
+            <span class="empty-icon">{{ icon("check", 22) }}</span>
+            <p class="empty-title">Tudo em dia</p>
+            <p class="empty-text">Nenhum aviso no momento.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="dropdown" data-dropdown>
+      <button type="button" class="user-chip" data-dropdown-trigger aria-expanded="false" aria-controls="user-panel" aria-label="Menu da conta de {{ current_user.name }}">
+        <span class="avatar" aria-hidden="true">{{ current_user.initials }}</span>
+        <span class="user-name">{{ current_user.name }}</span>
+        {{ icon("chevron", 16) }}
+      </button>
+      <div class="dropdown-panel" id="user-panel" data-dropdown-panel hidden>
+        <div class="dropdown-meta"><strong>{{ current_user.name }}</strong><span>{{ current_user.email }}</span></div>
+        <a class="menu-item" href="/configuracoes/perfil">{{ icon("user", 18) }} Meu perfil</a>
+        <form method="post" action="{{ url_for('auth.logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="menu-item">{{ icon("logout", 18) }} Sair</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</header>

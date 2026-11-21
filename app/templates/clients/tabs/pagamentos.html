@@ -1,0 +1,18 @@
+{% from "components/_ui.html" import empty_state, badge %}
+<section class="panel">
+  {% if items %}
+    <ul class="rows">
+      {% for t in items %}
+      <li class="row">
+        <div class="row-when"><strong>{{ t.date|date_br }}</strong></div>
+        <div class="row-main"><p class="row-title">{{ t.description }}</p>
+          <p class="row-sub">{{ t.payment_method.label if t.payment_method else "Forma não informada" }}</p></div>
+        <span class="row-end tabular">{{ t.amount_cents|brl }}</span>
+        {{ badge(t.status.label, t.status|tone) }}
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {{ empty_state("wallet", "Nenhum pagamento", "Sinais e pagamentos registrados para este cliente aparecem aqui.") }}
+  {% endif %}
+</section>

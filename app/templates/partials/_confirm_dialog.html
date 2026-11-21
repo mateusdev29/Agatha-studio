@@ -1,0 +1,10 @@
+{# Diálogo único de confirmação. Ative com data-confirm="Mensagem" em <form> ou <button type=submit>.
+   Opcionais: data-confirm-title, data-confirm-label, data-confirm-tone="danger". #}
+<dialog class="modal" id="confirm-dialog" aria-labelledby="confirm-title">
+  <div class="modal-head"><h2 class="modal-title" id="confirm-title">Confirmar ação</h2></div>
+  <div class="modal-body"><p id="confirm-message"></p></div>
+  <div class="modal-foot">
+    <button type="button" class="btn btn-ghost" data-confirm-cancel>Cancelar</button>
+    <button type="button" class="btn btn-primary" id="confirm-accept">Confirmar</button>
+  </div>
+</dialog>

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import page_header, ledger_item, chart_panel %}
+{% from "components/_period.html" import period_filter %}
+{% block title %}Dashboard · Agatha Souza Studio{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='vendor/chart.umd.js') }}" defer></script><script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>{% endblock %}
+{% block content %}
+  {{ page_header("Dashboard", "Indicadores do estúdio no período escolhido.") }}
+  <section class="panel">{{ period_filter("dashboard.dashboard", period) }}</section>
+
+  <section class="ledger section-gap" aria-label="Financeiro">
+    {{ ledger_item("Faturamento", ind.income|brl, "receitas pagas", money=True) }}
+    {{ ledger_item("Despesas", ind.expense|brl, "despesas pagas", money=True) }}
+    {{ ledger_item("Lucro", ind.profit|brl, "faturamento menos despesas", money=True) }}
+    {{ ledger_item("Ticket médio", (ind.ticket|brl) if ind.ticket is not none else "—", "por atendimento realizado", money=True) }}
+  </section>
+  <section class="ledger section-gap" aria-label="Clientes e projetos">
+    {{ ledger_item("Clientes", ind.clients_total, "ativos no cadastro") }}
+    {{ ledger_item("Novos clientes", ind.clients_new, "cadastrados no período") }}
+    {{ ledger_item("Clientes recorrentes", ind.clients_recurring, "voltaram a se tatuar") }}
+    {{ ledger_item("Projetos", ind.projects_created, (ind.projects_in_progress ~ " em andamento agora")) }}
+  </section>
+  <section class="ledger cols-2 section-gap" aria-label="Satisfação">
+    {{ ledger_item("Avaliações", ind.evaluations, ("Nota média " ~ ("%g"|format(ind.average_score)|replace(".", ","))) if ind.average_score is not none else "Sem avaliações") }}
+    {{ ledger_item("NPS", ind.nps if ind.nps is not none else "—", "índice de recomendação" if ind.nps is not none else "Precisa de mais avaliações") }}
+  </section>
+
+  <div class="charts-grid section-gap">
+    {{ chart_panel("Faturamento por mês", charts.revenue, has.money) }}
+    {{ chart_panel("Receitas x despesas", charts.income_expense, has.money) }}
+    {{ chart_panel("Estilos mais procurados", charts.styles, has.styles, "Cadastre projetos com estilo para ver este gráfico.") }}
+    {{ chart_panel("Regiões do corpo mais procuradas", charts.regions, has.regions, "Cadastre projetos com região para ver este gráfico.") }}
+    {{ chart_panel("Origem dos clientes", charts.sources, has.sources, "Informe como os clientes conheceram o estúdio.") }}
+  </div>
+{% endblock %}

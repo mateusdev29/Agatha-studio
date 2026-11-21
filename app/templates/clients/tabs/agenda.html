@@ -1,0 +1,20 @@
+{% from "components/_ui.html" import empty_state, badge, icon %}
+<section class="panel">
+  <div class="panel-head"><h2 class="panel-title">Atendimentos</h2>
+    {% if not client.is_archived %}<a class="btn btn-ghost btn-sm" href="{{ url_for('agenda.create', cliente=client.id) }}">{{ icon("plus", 16) }} Novo atendimento</a>{% endif %}
+  </div>
+  {% if items %}
+    <ul class="rows">
+      {% for a in items %}
+      <li class="row">
+        <div class="row-when"><strong>{{ a.starts_at.strftime("%H:%M") }}</strong><span>{{ a.starts_at|date_br }}</span></div>
+        <div class="row-main"><p class="row-title"><a class="link-strong" href="{{ url_for('agenda.detail', appt_id=a.id) }}">{{ a.service or "Atendimento" }}</a></p>
+          <p class="row-sub">{{ a.duration_minutes }} min · {{ a.price_cents|brl }}</p></div>
+        {{ badge(a.status.label, a.status|tone) }}
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {{ empty_state("calendar", "Nenhum atendimento", "Os horários agendados e realizados deste cliente aparecem aqui.", compact=True) }}
+  {% endif %}
+</section>

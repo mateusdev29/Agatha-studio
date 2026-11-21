@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import page_header, badge, empty_state %}
+{% from "components/_forms.html" import field, form_errors %}
+{% from "settings/_nav.html" import settings_nav %}
+{% block title %}Perguntas da anamnese · Agatha Souza Studio{% endblock %}
+{% block content %}
+  {{ page_header("Configurações", "Perguntas da anamnese") }}
+  {{ settings_nav("anamnese") }}
+  <div class="split">
+    <section class="panel">
+      {% if items %}<div class="table-wrap"><table class="table compact"><thead><tr><th>#</th><th>Pergunta</th><th>Tipo</th><th>Situação</th><th></th></tr></thead><tbody>
+        {% for q in items %}<tr><td class="nowrap" data-label="Ordem">{{ q.position }}</td><td class="cell-primary" data-label="Pergunta">{{ q.label }}{% if q.required %} <span class="muted">*</span>{% endif %}</td><td data-label="Tipo">{{ q.field_type.label }}</td>
+          <td data-label="Situação">{{ badge("Ativa", "success") if q.is_active else badge("Inativa") }}</td><td data-label="Ações"><a class="btn btn-ghost btn-sm" href="{{ url_for('anamnesis.question_edit', item_id=q.id) }}">Editar</a></td></tr>{% endfor %}</tbody></table></div>
+      {% else %}{{ empty_state("clipboard", "Nenhuma pergunta", "Adicione as perguntas da ficha.", compact=True) }}{% endif %}
+    </section>
+    <section class="panel"><div class="panel-head"><h2 class="panel-title">Nova pergunta</h2></div>
+      <form class="panel-body" method="post" novalidate>{{ form.hidden_tag() }}{{ form_errors(form) }}
+        {{ field(form.label) }}{{ field(form.help_text) }}{{ field(form.field_type) }}
+        {{ field(form.options_text, rows=4, help="Só para escolha única, múltipla ou lista.") }}{{ field(form.position, type="number", min=0) }}
+        <div class="field"><label class="check">{{ form.required() }} Resposta obrigatória</label></div><div class="field"><label class="check">{{ form.is_active() }} Ativa</label></div>
+        <button class="btn btn-primary btn-block" type="submit">Adicionar</button></form></section>
+  </div>
+{% endblock %}

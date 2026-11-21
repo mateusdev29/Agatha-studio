@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import icon, page_header, empty_state, badge, pagination %}
+{% block title %}Anamnese · Agatha Souza Studio{% endblock %}
+{% block content %}
+  {% call page_header("Anamnese", "Fichas de saúde assinadas pelos clientes.") %}
+    <a class="btn btn-primary" href="{{ url_for('anamnesis.fill') }}">{{ icon("plus", 18) }} Nova ficha</a>
+    <a class="btn btn-ghost" href="{{ url_for('anamnesis.questions') }}">Perguntas</a>
+  {% endcall %}
+  <section class="panel">
+    <form class="toolbar" method="get" action="{{ url_for('anamnesis.index') }}" role="search" data-no-loading>
+      <input class="input grow" type="search" name="q" value="{{ q }}" placeholder="Buscar por cliente" maxlength="100" aria-label="Buscar por cliente">
+      <button class="btn btn-ghost" type="submit">Filtrar</button><span class="toolbar-count">{{ responses.total }} {{ "ficha" if responses.total == 1 else "fichas" }}</span>
+    </form>
+    {% if responses.items %}
+    <div class="table-wrap"><table class="table"><thead><tr><th>Cliente</th><th>Data da ficha</th><th>Assinatura</th><th>Aceite</th></tr></thead><tbody>
+      {% for r in responses.items %}<tr><td class="cell-primary" data-label="Cliente"><a class="link-strong" href="{{ url_for('anamnesis.detail', response_id=r.id) }}">{{ r.client.name }}</a></td>
+        <td class="nowrap" data-label="Data da ficha">{{ r.created_at|local_date }}</td><td data-label="Assinatura">{{ r.signature_name or "—" }}</td>
+        <td data-label="Aceite">{{ badge("Aceita", "success") if r.accepted else badge("Pendente", "warning") }}</td></tr>{% endfor %}</tbody></table></div>
+    {{ pagination(responses, "anamnesis.index", q=q) }}
+    {% elif q %}{{ empty_state("clipboard", "Nenhuma ficha encontrada", "Tente outro nome.", "Limpar busca", url_for('anamnesis.index')) }}
+    {% else %}{{ empty_state("clipboard", "Nenhuma ficha ainda", "Registre a ficha de saúde antes do primeiro atendimento.", "Nova ficha", url_for('anamnesis.fill')) }}{% endif %}
+  </section>
+{% endblock %}

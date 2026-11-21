@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import icon, page_header, empty_state, badge, pagination %}
+{% block title %}Projetos · Agatha Souza Studio{% endblock %}
+
+{% block content %}
+  {% call page_header("Projetos", "Cada tatuagem, do orçamento à última sessão.") %}
+    <a class="btn btn-primary" href="{{ url_for('projects.create') }}">{{ icon("plus", 18) }} Novo projeto</a>
+  {% endcall %}
+
+  <section class="panel">
+    <form class="toolbar" method="get" action="{{ url_for('projects.index') }}" role="search" data-no-loading>
+      <input class="input grow" type="search" name="q" value="{{ q }}" placeholder="Buscar projeto" maxlength="100"
+             aria-label="Buscar por projeto, cliente ou estilo" title="Busca por projeto, cliente ou estilo">
+      <select class="select" name="status" aria-label="Status">
+        <option value="">Todos os status</option>
+        {% for s in statuses %}<option value="{{ s.value }}"{% if status == s.value %} selected{% endif %}>{{ s.label }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-ghost" type="submit">Filtrar</button>
+      <span class="toolbar-count">{{ projects.total }} {{ "projeto" if projects.total == 1 else "projetos" }}</span>
+    </form>
+
+    {% if projects.items %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Projeto</th><th>Cliente</th><th>Estilo e região</th><th class="num">Valor</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for p in projects.items %}
+            <tr>
+              <td class="cell-primary" data-label="Projeto"><a class="link-strong" href="{{ url_for('projects.detail', project_id=p.id) }}">{{ p.name }}</a></td>
+              <td data-label="Cliente">{{ p.client.name }}</td>
+              <td data-label="Estilo e região">{{ [p.style, p.body_region.name if p.body_region else None]|select|join(" · ") or "—" }}</td>
+              <td class="num" data-label="Valor">{{ p.price_cents|brl }}</td>
+              <td data-label="Status">{{ badge(p.status.label, p.status|tone) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {{ pagination(projects, "projects.index", q=q, status=status) }}
+    {% elif q or status %}
+      {{ empty_state("layers", "Nenhum projeto encontrado", "Tente outro termo de busca ou limpe o filtro de status.", "Limpar filtros", url_for('projects.index')) }}
+    {% else %}
+      {{ empty_state("layers", "Nenhum projeto ainda", "Crie o primeiro projeto para acompanhar sessões, valores e referências.", "Criar projeto", url_for('projects.create')) }}
+    {% endif %}
+  </section>
+{% endblock %}

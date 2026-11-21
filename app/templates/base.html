@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light">
+  <title>{% block title %}Agatha Souza Studio{% endblock %}</title>
+  {% for css in ("fonts", "tokens", "base", "layout", "components") %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/' ~ css ~ '.css') }}">
+  {% endfor %}
+  {% block styles %}{% endblock %}
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+  {% include "components/_icons.html" %}
+
+  <div class="app">
+    {% include "partials/_sidebar.html" %}
+    <div class="main">
+      {% include "partials/_topbar.html" %}
+      <main id="conteudo" class="content" tabindex="-1">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <div class="scrim" data-drawer-close></div>
+  {% include "partials/_toasts.html" %}
+  {% include "partials/_confirm_dialog.html" %}
+
+  <script src="{{ url_for('static', filename='js/layout.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/ui.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

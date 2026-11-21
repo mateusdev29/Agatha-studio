@@ -1,0 +1,30 @@
+{% extends "base_auth.html" %}
+{% block title %}Entrar · Agatha Souza Studio{% endblock %}
+
+{% block content %}
+  <h1 class="auth-title">Gestão do Estúdio</h1>
+
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+
+    <div class="field">
+      {{ form.email.label }}
+      {{ form.email(class="input", type="email", autocomplete="username", autofocus=true, placeholder="voce@exemplo.com") }}
+      {% for error in form.email.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+    </div>
+
+    <div class="field">
+      {{ form.password.label }}
+      {{ form.password(class="input", autocomplete="current-password") }}
+      {% for error in form.password.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+    </div>
+
+    <div class="field">
+      <label class="check">{{ form.remember() }} {{ form.remember.label.text }}</label>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+  </form>
+
+  <p class="auth-note">Acesso restrito à equipe do estúdio.</p>
+{% endblock %}

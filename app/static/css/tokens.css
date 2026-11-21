@@ -1,0 +1,75 @@
+/* Design tokens — AGATHA SOUZA Tattoo Studio.
+   Toda cor, tipografia, espaçamento e forma do sistema nasce daqui. */
+:root {
+  /* Superfícies (greige de papel, não creme) */
+  --color-paper: #f2f0ec;
+  --color-surface: #fcfbf9;
+  --color-surface-sunk: #ebe8e2;
+
+  /* Tinta e grafite */
+  --color-ink: #151413;
+  --color-graphite: #34322f;
+  --color-muted: #6c675f;
+  --color-faint: #9d988e;
+
+  /* Linhas */
+  --color-line: #dcd8cf;
+  --color-line-soft: #e7e4dd;
+
+  /* Destaque único: azul-nanquim */
+  --color-accent: #2f3b6b;
+  --color-accent-strong: #232d54;
+  --color-accent-soft: #e3e6f1;
+  --color-accent-on-dark: #a9b6ea;
+
+  /* Sobre fundo escuro (sidebar) */
+  --color-on-ink: #f4f2ee;
+  --color-on-ink-muted: #aca79d;
+  --color-ink-line: rgba(255, 255, 255, 0.09);
+
+  /* Feedback */
+  --color-success: #3d6b4f;
+  --color-success-soft: #e2eee6;
+  --color-warning: #8a5a12;
+  --color-warning-soft: #f5ead2;
+  --color-danger: #a63a2b;
+  --color-danger-soft: #f6e3df;
+
+  /* Tipografia */
+  --font-display: "Bodoni Moda", Didot, "Bodoni MT", Georgia, "Times New Roman", serif;
+  --font-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --text-xs: 12.5px;
+  --text-sm: 13.5px;
+  --text-base: 15px;
+  --text-lg: 17px;
+  --text-xl: 22px;
+  --text-2xl: 30px;
+  --text-3xl: 42px;
+
+  /* Forma: raio por hierarquia (controle < painel < modal) */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* Sombra só em elementos flutuantes; painéis usam linha fina */
+  --shadow-float: 0 12px 40px rgba(21, 20, 19, 0.14), 0 2px 6px rgba(21, 20, 19, 0.06);
+
+  /* Espaçamento */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Layout */
+  --sidebar-w: 264px;
+  --topbar-h: 64px;
+  --content-pad: 48px;
+  --content-max: 1240px;
+}
+
+@media (max-width: 1099px) { :root { --content-pad: 32px; } }
+@media (max-width: 767px)  { :root { --content-pad: 16px; --topbar-h: 60px; } }

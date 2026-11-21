@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import icon, page_header, ledger_item, chart_panel, empty_state, badge, pagination %}
+{% from "components/_period.html" import period_filter %}
+{% block title %}Satisfação · Agatha Souza Studio{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='vendor/chart.umd.js') }}" defer></script><script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>{% endblock %}
+{% block content %}
+  {% call page_header("Satisfação", "O que os clientes acham do atendimento.") %}
+    <a class="btn btn-primary" href="{{ url_for('satisfaction.create') }}">{{ icon("plus", 18) }} Nova avaliação</a>
+  {% endcall %}
+  <section class="panel">{{ period_filter("satisfaction.index", period) }}</section>
+  <section class="ledger section-gap">
+    {{ ledger_item("Nota média", ("%g"|format(ind.average_score)|replace(".", ",")) if ind.average_score is not none else "—", "de 0 a 10") }}
+    {{ ledger_item("Avaliações", ind.evaluations, "no período") }}
+    {{ ledger_item("NPS", ind.nps if ind.nps is not none else "—", "promotores menos detratores" if ind.nps is not none else ("Disponível a partir de " ~ min_nps ~ " avaliações")) }}
+  </section>
+  <div class="charts-grid section-gap">
+    {{ chart_panel("Distribuição das notas", charts.dist, has) }}
+    {{ chart_panel("Nota média por mês", charts.trend, has) }}
+  </div>
+  <section class="panel section-gap">
+    <div class="panel-head"><h2 class="panel-title">Avaliações</h2></div>
+    {% if items.items %}
+    <div class="table-wrap"><table class="table"><thead><tr><th>Cliente</th><th>Data</th><th class="num">Nota</th><th>Comentário</th><th></th></tr></thead><tbody>
+      {% for e in items.items %}<tr><td class="cell-primary" data-label="Cliente"><a class="link-strong" href="{{ url_for('clients.detail', client_id=e.client_id) }}">{{ e.client.name }}</a></td>
+        <td class="nowrap" data-label="Data">{{ e.evaluated_on|date_br }}</td>
+        <td class="num nowrap" data-label="Nota">{{ badge(e.score ~ "/10", "success" if e.score >= 9 else "danger" if e.score <= 6 else "neutral") }}</td>
+        <td data-label="Comentário">{{ (e.comment or "—")|truncate(80) }}</td><td data-label="Ações"><a class="btn btn-ghost btn-sm" href="{{ url_for('satisfaction.edit', item_id=e.id) }}">Editar</a></td></tr>{% endfor %}</tbody></table></div>
+    {{ pagination(items, "satisfaction.index", **period.args) }}
+    {% else %}{{ empty_state("star", "Nenhuma avaliação no período", "Registre a nota e o comentário dos clientes após o atendimento.", "Nova avaliação", url_for('satisfaction.create'), compact=True) }}{% endif %}
+  </section>
+{% endblock %}

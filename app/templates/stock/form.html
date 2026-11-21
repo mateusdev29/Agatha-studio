@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import page_header %}
+{% from "components/_forms.html" import field, form_errors %}
+{% set title = "Editar produto" if item else "Novo produto" %}
+{% block title %}{{ title }} · Agatha Souza Studio{% endblock %}
+{% block content %}
+  {{ page_header(title, item.name if item else None) }}
+  <section class="panel"><form class="panel-body" method="post" novalidate>
+    {{ form.hidden_tag() }}{{ form_errors(form) }}
+    <div class="form-grid">
+      {{ field(form.name, span=2, autofocus=true, autocomplete="off") }}
+      {{ field(form.category_id) }}
+      {{ field(form.unit, placeholder="un, ml, caixa") }}
+      {% if not item %}{{ field(form.quantity, type="number", min=0) }}{% endif %}
+      {{ field(form.min_quantity, type="number", min=0, help="Abaixo ou igual a este valor, o produto entra em alerta.") }}
+      {{ field(form.cost_cents, inputmode="decimal", placeholder="0,00", autocomplete="off") }}
+      {{ field(form.supplier, autocomplete="off") }}
+      {{ field(form.expires_on) }}
+      {{ field(form.notes, span=2, rows=3) }}
+    </div>
+    {% if item %}<p class="muted help-text">A quantidade só muda por movimentação (entrada, saída ou ajuste), para manter o histórico.</p>{% endif %}
+    <div class="form-actions">
+      <a class="btn btn-ghost" href="{{ url_for('stock.detail', item_id=item.id) if item else url_for('stock.index') }}">Cancelar</a>
+      <button class="btn btn-primary" type="submit">{{ "Salvar alterações" if item else "Cadastrar produto" }}</button>
+    </div>
+  </form></section>
+{% endblock %}

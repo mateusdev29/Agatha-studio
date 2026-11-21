@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import page_header %}
+{% from "components/_forms.html" import field, form_errors %}
+{% set title = "Editar cliente" if client else "Novo cliente" %}
+{% block title %}{{ title }} · Agatha Souza Studio{% endblock %}
+
+{% block content %}
+  {{ page_header(title, client.name if client else "Preencha o essencial; o resto pode ser completado depois.") }}
+
+  <section class="panel">
+    <form class="panel-body" method="post" novalidate>
+      {{ form.hidden_tag() }}{{ form_errors(form) }}
+      <div class="form-grid">
+        {{ field(form.name, span=2, autofocus=true, autocomplete="off") }}
+        {{ field(form.phone, type="tel", autocomplete="off", placeholder="(71) 99999-0000") }}
+        {{ field(form.email, type="email", autocomplete="off") }}
+        {{ field(form.instagram, autocomplete="off", placeholder="usuario", help="Sem o @.") }}
+        {{ field(form.birth_date) }}
+        {{ field(form.source, span=2) }}
+        {{ field(form.notes, span=2, rows=4, help="Preferências, cuidados e combinados. Visível só para você.") }}
+      </div>
+      <div class="form-actions">
+        <a class="btn btn-ghost" href="{{ url_for('clients.detail', client_id=client.id) if client else url_for('clients.index') }}">Cancelar</a>
+        <button class="btn btn-primary" type="submit">{{ "Salvar alterações" if client else "Cadastrar cliente" }}</button>
+      </div>
+    </form>
+  </section>
+{% endblock %}

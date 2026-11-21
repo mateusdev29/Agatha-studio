@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import page_header %}
+{% from "components/_forms.html" import field, form_errors %}
+{% set title = "Editar sessão" if session else "Nova sessão" %}
+{% block title %}{{ title }} · Agatha Souza Studio{% endblock %}
+
+{% block content %}
+  {{ page_header(title, project.name) }}
+  <section class="panel">
+    <form class="panel-body" method="post" novalidate>
+      {{ form.hidden_tag() }}{{ form_errors(form) }}
+      <div class="form-grid">
+        {{ field(form.scheduled_at, autofocus=true) }}
+        {{ field(form.duration_minutes, type="number", min=15, max=720, step=15) }}
+        {{ field(form.price_cents, inputmode="decimal", placeholder="0,00", autocomplete="off") }}
+        {{ field(form.status) }}
+        {{ field(form.notes, span=2, rows=3) }}
+      </div>
+      <div class="form-actions">
+        <a class="btn btn-ghost" href="{{ url_for('projects.detail', project_id=project.id) }}">Cancelar</a>
+        <button class="btn btn-primary" type="submit">{{ "Salvar alterações" if session else "Adicionar sessão" }}</button>
+      </div>
+    </form>
+  </section>
+{% endblock %}

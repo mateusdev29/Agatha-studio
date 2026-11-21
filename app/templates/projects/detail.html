@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import icon, page_header, badge, empty_state %}
+{% from "components/_forms.html" import form_errors %}
+{% block title %}{{ project.name }} · Agatha Souza Studio{% endblock %}
+
+{% block content %}
+  {% call page_header(project.name, project.client.name) %}
+    {{ badge(project.status.label, project.status|tone) }}
+    <a class="btn btn-ghost" href="{{ url_for('projects.edit', project_id=project.id) }}">Editar</a>
+  {% endcall %}
+
+  <div class="split">
+    <div class="stack">
+      <section class="panel" aria-labelledby="h-sessions">
+        <div class="panel-head">
+          <h2 class="panel-title" id="h-sessions">Sessões</h2>
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('projects.session_create', project_id=project.id) }}">{{ icon("plus", 16) }} Nova sessão</a>
+        </div>
+        {% if project.sessions %}
+        <div class="table-wrap">
+          <table class="table compact">
+            <thead><tr><th>Sessão</th><th class="num">Valor</th><th>Status</th><th><span class="visually-hidden">Ações</span></th></tr></thead>
+            <tbody>
+              {% for s in project.sessions %}
+              <tr>
+                <td class="cell-primary" data-label="Sessão"><div><span class="cell-title">{{ s.scheduled_at|date_br }}</span>
+                  <span class="cell-sub">às {{ s.scheduled_at.strftime("%H:%M") }} · {{ s.duration_minutes }} min</span></div></td>
+                <td class="num nowrap" data-label="Valor">{{ s.price_cents|brl }}</td>
+                <td class="nowrap" data-label="Status">{{ badge(s.status.label, s.status|tone) }}</td>
+                <td data-label="Ações"><div class="row-actions">
+                  <a class="btn btn-ghost btn-sm" href="{{ url_for('projects.session_edit', project_id=project.id, session_id=s.id) }}">Editar</a>
+                  <form method="post" action="{{ url_for('projects.session_delete', project_id=project.id, session_id=s.id) }}"
+                        data-confirm="A sessão será removida deste projeto." data-confirm-title="Excluir sessão?" data-confirm-label="Excluir" data-confirm-tone="danger">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-ghost btn-sm" type="submit">Excluir</button>
+                  </form>
+                </div></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+          {{ empty_state("calendar", "Nenhuma sessão", "Adicione as sessões deste projeto, com data, duração e valor.", "Adicionar sessão", url_for('projects.session_create', project_id=project.id), compact=True) }}
+        {% endif %}
+      </section>
+
+      <section class="panel" aria-labelledby="h-refs">
+        <div class="panel-head"><h2 class="panel-title" id="h-refs">Referências</h2>
+          <span class="muted">{{ project.references|length }} de {{ config.MAX_REFERENCES_PER_PROJECT }}</span></div>
+        {% if project.references %}
+        <ul class="gallery">
+          {% for r in project.references %}
+          <li class="gallery-item">
+            <a href="{{ url_for('projects.reference_file', project_id=project.id, reference_id=r.id) }}" target="_blank" rel="noopener">
+              <img src="{{ url_for('projects.reference_thumb', project_id=project.id, reference_id=r.id) }}" alt="Referência: {{ r.original_filename }}" loading="lazy" width="240" height="240">
+            </a>
+            <form method="post" action="{{ url_for('projects.reference_delete', project_id=project.id, reference_id=r.id) }}"
+                  data-confirm="A imagem será removida do projeto." data-confirm-title="Remover imagem?" data-confirm-label="Remover" data-confirm-tone="danger">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="icon-btn gallery-del" type="submit" aria-label="Remover imagem {{ r.original_filename }}">{{ icon("x", 16) }}</button>
+            </form>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+          {{ empty_state("inbox", "Nenhuma referência", "Envie fotos e desenhos que inspiram esta tatuagem.", compact=True) }}
+        {% endif %}
+        <form class="upload-row" method="post" action="{{ url_for('projects.reference_upload', project_id=project.id) }}" enctype="multipart/form-data">
+          {{ upload_form.hidden_tag() }}{{ form_errors(upload_form) }}
+          <input class="input" type="file" name="files" multiple accept="image/jpeg,image/png,image/webp" aria-label="Escolher imagens de referência" required>
+          <button class="btn btn-ghost" type="submit">Enviar imagens</button>
+        </form>
+        <p class="panel-body muted help-line">JPG, PNG ou WEBP, até {{ config.MAX_UPLOAD_FILE_BYTES // 1048576 }} MB cada. Dados de localização das fotos são removidos.</p>
+      </section>
+    </div>
+
+    <div class="stack">
+      <section class="panel">
+        <div class="panel-head"><h2 class="panel-title">Detalhes</h2></div>
+        <dl class="datalist">
+          <div><dt>Cliente</dt><dd><a class="link-strong" href="{{ url_for('clients.detail', client_id=project.client_id) }}">{{ project.client.name }}</a></dd></div>
+          <div><dt>Estilo</dt><dd>{{ project.style or "—" }}</dd></div>
+          <div><dt>Região</dt><dd>{{ project.body_region.name if project.body_region else "—" }}</dd></div>
+          <div><dt>Tamanho</dt><dd>{{ project.size or "—" }}</dd></div>
+          <div><dt>Valor</dt><dd>{{ project.price_cents|brl }}</dd></div>
+        </dl>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2 class="panel-title">Financeiro</h2></div>
+        <dl class="datalist">
+          <div><dt>Pago</dt><dd>{{ fin.paid_cents|brl }}</dd></div>
+          <div><dt>A receber</dt><dd>{{ fin.pending_cents|brl }}</dd></div>
+          <div><dt>Sessões ({{ fin.sessions_count }})</dt><dd>{{ fin.sessions_total_cents|brl }}</dd></div>
+        </dl>
+      </section>
+
+      {% if project.description or project.notes %}
+      <section class="panel">
+        <div class="panel-head"><h2 class="panel-title">Notas</h2></div>
+        <div class="panel-body">
+          {% if project.description %}<p class="notes-text">{{ project.description }}</p>{% endif %}
+          {% if project.notes %}<p class="notes-text muted{% if project.description %} notes-gap{% endif %}">{{ project.notes }}</p>{% endif %}
+        </div>
+      </section>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

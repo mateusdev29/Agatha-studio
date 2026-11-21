@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import page_header, badge %}
+{% block title %}Ficha de {{ r.client.name }} · Agatha Souza Studio{% endblock %}
+{% block content %}
+  {% call page_header("Ficha de " ~ r.client.name, "Registrada em " ~ (r.created_at|local_date)) %}
+    {{ badge("Aceita", "success") if r.accepted else badge("Pendente", "warning") }}
+    <a class="btn btn-ghost" href="{{ url_for('clients.detail', client_id=r.client_id) }}">Ver cliente</a>
+  {% endcall %}
+  <div class="split">
+    <section class="panel"><div class="panel-head"><h2 class="panel-title">Respostas</h2></div>
+      <div class="panel-body">{% for a in r.answers %}<div class="qa"><p class="qa-q">{{ a.label }}</p><p class="notes-text">{{ fmt(a) }}</p></div>{% endfor %}</div></section>
+    <section class="panel"><div class="panel-head"><h2 class="panel-title">Aceite e assinatura</h2></div>
+      <dl class="datalist"><div><dt>Aceite</dt><dd>{{ "Sim" if r.accepted else "Não" }}</dd></div>
+        <div><dt>Data do aceite</dt><dd>{{ r.accepted_at|local_date or "—" }}</dd></div><div><dt>Assinatura</dt><dd>{{ r.signature_name or "—" }}</dd></div></dl>
+      <p class="panel-body muted help-text">A ficha é um registro e não pode ser editada. Para atualizar informações, registre uma nova ficha.</p></section>
+  </div>
+{% endblock %}

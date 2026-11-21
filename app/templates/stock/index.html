@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import icon, page_header, empty_state, badge, pagination, tab_nav %}
+{% block title %}Estoque · Agatha Souza Studio{% endblock %}
+
+{% block content %}
+  {% call page_header("Estoque", "Materiais, alertas de reposição e histórico de movimentações.") %}
+    <a class="btn btn-primary" href="{{ url_for('stock.create') }}">{{ icon("plus", 18) }} Novo produto</a>
+  {% endcall %}
+  {% if low_count %}<div class="banner" role="status"><span>{{ low_count }} {{ "produto com estoque baixo" if low_count == 1 else "produtos com estoque baixo" }}.</span>
+    <a class="link-strong" href="{{ url_for('stock.index', baixo=1) }}">Ver apenas estes</a></div>{% endif %}
+  {{ tab_nav([("itens", "Produtos"), ("movimentacoes", "Movimentações")], tab, "stock.index") }}
+
+  {% if tab == "movimentacoes" %}
+  <section class="panel">
+    {% if movements.items %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Produto</th><th>Quando</th><th>Tipo</th><th class="num">Variação</th><th class="num">Saldo</th><th>Motivo</th></tr></thead>
+      <tbody>{% for m in movements.items %}<tr>
+        <td class="cell-primary" data-label="Produto"><a class="link-strong" href="{{ url_for('stock.detail', item_id=m.item_id) }}">{{ m.item.name }}</a></td>
+        <td class="nowrap" data-label="Quando">{{ m.created_at|local_date }}</td>
+        <td data-label="Tipo">{{ badge(m.type.label, "success" if m.type.value == "entrada" else "warning" if m.type.value == "saida" else "accent") }}</td>
+        <td class="num" data-label="Variação">{{ "%+d"|format(m.delta) }}</td><td class="num" data-label="Saldo">{{ m.balance_after }}</td>
+        <td data-label="Motivo">{{ m.reason or "—" }}</td></tr>{% endfor %}</tbody></table></div>
+    {{ pagination(movements, "stock.index", aba="movimentacoes") }}
+    {% else %}{{ empty_state("box", "Nenhuma movimentação", "Entradas, saídas e ajustes aparecem aqui.") }}{% endif %}
+  </section>
+  {% else %}
+  <section class="panel">
+    <form class="toolbar" method="get" action="{{ url_for('stock.index') }}" role="search" data-no-loading>
+      <input class="input grow" type="search" name="q" value="{{ q }}" placeholder="Buscar produto" maxlength="100" aria-label="Buscar por produto ou fornecedor">
+      <select class="select" name="categoria" aria-label="Categoria"><option value="">Todas as categorias</option>
+        {% for c in categories %}<option value="{{ c.id }}"{% if categoria == c.id %} selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
+      <select class="select" name="status" aria-label="Situação"><option value="">Ativos</option><option value="arquivados"{% if archived %} selected{% endif %}>Arquivados</option></select>
+      <label class="check"><input type="checkbox" name="baixo" value="1"{% if low %} checked{% endif %}> Só estoque baixo</label>
+      <button class="btn btn-ghost" type="submit">Filtrar</button>
+      <span class="toolbar-count">{{ items.total }} {{ "produto" if items.total == 1 else "produtos" }}</span>
+    </form>
+    {% if items.items %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th>Produto</th><th>Categoria</th><th class="num">Quantidade</th><th class="num">Mínimo</th><th class="num">Custo</th><th>Validade</th></tr></thead>
+      <tbody>{% for i in items.items %}<tr>
+        <td class="cell-primary" data-label="Produto"><a class="link-strong" href="{{ url_for('stock.detail', item_id=i.id) }}">{{ i.name }}</a>{% if i.is_low %} {{ badge("Baixo", "warning") }}{% endif %}</td>
+        <td data-label="Categoria">{{ i.category.name if i.category else "—" }}</td>
+        <td class="num nowrap" data-label="Quantidade">{{ i.quantity }} {{ i.unit }}</td><td class="num" data-label="Mínimo">{{ i.min_quantity }}</td>
+        <td class="num nowrap" data-label="Custo">{{ i.cost_cents|brl }}</td><td class="nowrap" data-label="Validade">{{ i.expires_on|date_br or "—" }}</td></tr>{% endfor %}</tbody></table></div>
+    {{ pagination(items, "stock.index", q=q, categoria=categoria, baixo="1" if low else "", status="arquivados" if archived else "") }}
+    {% elif q or low or categoria or archived %}{{ empty_state("box", "Nenhum produto encontrado", "Tente outros filtros.", "Limpar filtros", url_for('stock.index')) }}
+    {% else %}{{ empty_state("box", "Nenhum produto cadastrado", "Cadastre agulhas, tintas e descartáveis para acompanhar o estoque.", "Cadastrar produto", url_for('stock.create')) }}{% endif %}
+  </section>
+  {% endif %}
+{% endblock %}

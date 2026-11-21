@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import page_header, badge %}
+{% from "components/_forms.html" import field, form_errors %}
+{% block title %}Atendimento de {{ appt.client.name }} · Agatha Souza Studio{% endblock %}
+
+{% macro act(endpoint, label, kind="ghost", confirm=None) %}
+<form method="post" action="{{ url_for(endpoint, appt_id=appt.id) }}"
+      {% if confirm %}data-confirm="{{ confirm }}" data-confirm-title="{{ label }}?" data-confirm-label="{{ label }}" data-confirm-tone="danger"{% endif %}>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button class="btn btn-{{ kind }}" type="submit">{{ label }}</button>
+</form>
+{% endmacro %}
+
+{% block content %}
+  {% set cancel_msg = "O horário ficará livre na agenda." %}
+  {% if deposit and deposit.status.value == "pago" %}
+    {% set cancel_msg = "O sinal de " ~ (deposit.amount_cents|brl) ~ " já está lançado como recebido no Financeiro e NÃO será alterado: trate a devolução por lá, se for o caso. O horário ficará livre na agenda." %}
+  {% endif %}
+
+  {% call page_header(appt.client.name, (appt.starts_at|date_br) ~ ", " ~ appt.starts_at.strftime("%H:%M") ~ " até " ~ appt.ends_at.strftime("%H:%M")) %}
+    {{ badge(appt.status.label, appt.status|tone) }}
+    {% if editable %}<a class="btn btn-ghost" href="{{ url_for('agenda.edit', appt_id=appt.id) }}">Editar</a>{% endif %}
+  {% endcall %}
+
+  <div class="split">
+    <section class="panel">
+      <div class="panel-head"><h2 class="panel-title">Detalhes</h2></div>
+      <dl class="datalist">
+        <div><dt>Cliente</dt><dd><a class="link-strong" href="{{ url_for('clients.detail', client_id=appt.client_id) }}">{{ appt.client.name }}</a></dd></div>
+        <div><dt>Projeto</dt><dd>{% if appt.project %}<a class="link-strong" href="{{ url_for('projects.detail', project_id=appt.project_id) }}">{{ appt.project.name }}</a>{% else %}—{% endif %}</dd></div>
+        <div><dt>Serviço</dt><dd>{{ appt.service or "—" }}</dd></div>
+        <div><dt>Duração</dt><dd>{{ appt.duration_minutes }} min</dd></div>
+        <div><dt>Valor</dt><dd>{{ appt.price_cents|brl }}</dd></div>
+        <div><dt>Sinal combinado</dt><dd>{{ appt.deposit_cents|brl }}</dd></div>
+      </dl>
+      {% if appt.notes %}<div class="panel-body"><p class="notes-text muted">{{ appt.notes }}</p></div>{% endif %}
+    </section>
+
+    <div class="stack">
+      <section class="panel">
+        <div class="panel-head"><h2 class="panel-title">Ações</h2></div>
+        <div class="action-stack">
+          {% if appt.status == S.WAITING %}{{ act("agenda.confirm", "Confirmar atendimento", "primary") }}{% endif %}
+          {% if appt.status in (S.WAITING, S.CONFIRMED) %}
+            {{ act("agenda.finish", "Marcar como realizado", "primary" if appt.status == S.CONFIRMED else "ghost") }}
+            <a class="btn btn-ghost" href="{{ url_for('agenda.reschedule', appt_id=appt.id) }}">Remarcar</a>
+            {{ act("agenda.cancel", "Cancelar atendimento", "ghost", confirm=cancel_msg) }}
+          {% elif appt.status == S.CANCELED %}
+            {{ act("agenda.reactivate", "Reativar atendimento", "primary") }}
+          {% else %}
+            <p class="muted help-text">Este atendimento está encerrado e não pode mais ser alterado.</p>
+          {% endif %}
+        </div>
+      </section>
+
+      <section class="panel" id="sinal">
+        <div class="panel-head"><h2 class="panel-title">Sinal no Financeiro</h2>{% if deposit %}{{ badge(deposit.status.label, deposit.status|tone) }}{% endif %}</div>
+        {% if deposit %}
+          <dl class="datalist">
+            <div><dt>Valor</dt><dd>{{ deposit.amount_cents|brl }}</dd></div>
+            <div><dt>Data</dt><dd>{{ deposit.date|date_br }}</dd></div>
+            <div><dt>Forma</dt><dd>{{ deposit.payment_method.label if deposit.payment_method else "—" }}</dd></div>
+          </dl>
+          <div class="action-stack">
+            {% if deposit.status.value == "pendente" %}
+            <form method="post" action="{{ url_for('finance.pay', item_id=deposit.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-primary" type="submit">Marcar como recebido</button></form>
+            {% endif %}
+            <a class="btn btn-ghost" href="{{ url_for('finance.edit', item_id=deposit.id) }}">Ver no Financeiro</a>
+          </div>
+          {% if appt.status == S.CANCELED %}<p class="panel-body muted help-text">Atendimento cancelado: o lançamento não foi alterado. Trate a devolução no Financeiro, se for o caso.</p>{% endif %}
+        {% elif appt.deposit_cents > 0 and appt.status not in (S.CANCELED, S.RESCHEDULED) %}
+          <form class="panel-body" method="post" action="{{ url_for('agenda.launch_deposit', appt_id=appt.id) }}" novalidate>
+            {{ deposit_form.hidden_tag() }}{{ form_errors(deposit_form) }}
+            <p class="muted help-text">Sinal combinado de <strong>{{ appt.deposit_cents|brl }}</strong>, ainda não lançado no Financeiro.</p>
+            {{ field(deposit_form.payment_method) }}{{ field(deposit_form.date) }}{{ field(deposit_form.status) }}
+            <button class="btn btn-primary btn-block" type="submit">Lançar no Financeiro</button>
+          </form>
+        {% elif appt.deposit_cents > 0 %}
+          <p class="panel-body muted help-text">Sinal de {{ appt.deposit_cents|brl }} não lançado. Este atendimento está {{ appt.status.label|lower }}.</p>
+        {% else %}
+          <p class="panel-body muted help-text">Sem sinal combinado. Informe o valor ao editar o atendimento para poder lançá-lo.</p>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+{% endblock %}

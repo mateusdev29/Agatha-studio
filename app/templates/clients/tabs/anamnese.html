@@ -1,0 +1,18 @@
+{% from "components/_ui.html" import empty_state, badge %}
+<section class="panel">
+  <div class="panel-head"><h2 class="panel-title">Fichas</h2>{% if not client.is_archived %}<a class="btn btn-ghost btn-sm" href="{{ url_for('anamnesis.fill', cliente=client.id) }}">Nova ficha</a>{% endif %}</div>
+  {% if items %}
+    <ul class="rows">
+      {% for r in items %}
+      <li class="row">
+        <div class="row-main"><p class="row-title"><a class="link-strong" href="{{ url_for('anamnesis.detail', response_id=r.id) }}">Ficha de {{ r.created_at|local_date }}</a></p>
+          <p class="row-sub">{% if r.accepted_at %}Aceite em {{ r.accepted_at|local_date }}{% else %}Sem aceite registrado{% endif %}</p></div>
+        {{ badge("Aceita", "success") if r.accepted else badge("Pendente", "warning") }}
+      </li>
+      {% endfor %}
+    </ul>
+    <p class="panel-body muted">As respostas de saúde são dados sensíveis e ficam disponíveis apenas no módulo de Anamnese.</p>
+  {% else %}
+    {{ empty_state("clipboard", "Nenhuma ficha de anamnese", "A ficha de saúde preenchida por este cliente aparece aqui.") }}
+  {% endif %}
+</section>

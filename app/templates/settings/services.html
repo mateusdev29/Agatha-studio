@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import page_header, badge, empty_state %}
+{% from "components/_forms.html" import field, form_errors %}
+{% from "settings/_nav.html" import settings_nav %}
+{% block title %}Serviços · Agatha Souza Studio{% endblock %}
+{% block content %}
+  {{ page_header("Configurações", "Serviços oferecidos") }}
+  {{ settings_nav(current) }}
+  <div class="split">
+    <section class="panel">
+      {% if items %}<div class="table-wrap"><table class="table"><thead><tr><th>Serviço</th><th>Duração</th><th class="num">Valor</th><th>Situação</th><th></th></tr></thead><tbody>
+        {% for s in items %}<tr><td class="cell-primary" data-label="Serviço">{{ s.name }}</td><td class="nowrap" data-label="Duração">{{ s.default_duration_minutes }} min</td><td class="num" data-label="Valor">{{ s.default_price_cents|brl }}</td>
+          <td data-label="Situação">{{ badge("Ativo", "success") if s.is_active else badge("Inativo") }}</td><td data-label="Ações"><a class="btn btn-ghost btn-sm" href="{{ url_for('settings.service_edit', item_id=s.id) }}">Editar</a></td></tr>{% endfor %}</tbody></table></div>
+      {% else %}{{ empty_state("settings", "Nenhum serviço", "Cadastre os serviços para sugeri-los na agenda.", compact=True) }}{% endif %}
+    </section>
+    <section class="panel"><div class="panel-head"><h2 class="panel-title">Novo serviço</h2></div>
+      <form class="panel-body" method="post" novalidate>{{ form.hidden_tag() }}{{ form_errors(form) }}
+        {{ field(form.name) }}{{ field(form.default_duration_minutes, type="number", min=15, max=720, step=15) }}{{ field(form.default_price_cents, inputmode="decimal", placeholder="0,00") }}
+        <div class="field"><label class="check">{{ form.is_active() }} Ativo</label></div>
+        <button class="btn btn-primary btn-block" type="submit">Adicionar</button></form></section>
+  </div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import icon, page_header, ledger_item, empty_state, badge %}
+{% block title %}Visão Geral · Agatha Souza Studio{% endblock %}
+{% block content %}
+  {{ page_header(overview.greeting ~ ", " ~ user.name.split()[0], overview.today|date_long) }}
+
+  <section class="ledger" aria-label="Indicadores de hoje e do mês">
+    {{ ledger_item("Atendimentos hoje", overview.appointments_today,
+         ("Próximo às " ~ overview.next_today.strftime("%H:%M")) if overview.next_today else ("Nenhum a seguir" if overview.appointments_today else "Agenda livre")) }}
+    {{ ledger_item("Faturamento do mês", overview.revenue_month_cents|brl, overview.today|month_year, money=True) }}
+    {{ ledger_item("Projetos em andamento", overview.projects_in_progress, "com sessões abertas" if overview.projects_in_progress else "Nenhum em andamento") }}
+    {{ ledger_item("Orçamentos pendentes", overview.pending_quotes, "aguardando resposta" if overview.pending_quotes else "Nada pendente") }}
+  </section>
+
+  <div class="split">
+    <section class="panel" aria-labelledby="h-upcoming">
+      <div class="panel-head"><h2 class="panel-title" id="h-upcoming">Próximos atendimentos</h2></div>
+      {% if overview.upcoming %}
+        <ul class="rows">
+          {% for a in overview.upcoming %}
+          <li class="row">
+            <div class="row-when"><strong>{{ a.starts_at.strftime("%H:%M") }}</strong><span>{{ a.starts_at|day_label }}</span></div>
+            <div class="row-main">
+              <p class="row-title">{{ a.client.name }}</p>
+              <p class="row-sub">{{ a.service or "Atendimento" }}</p>
+            </div>
+            {{ badge(a.status.label, a.status|tone) }}
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {{ empty_state("calendar", "Nenhum atendimento à vista", "Quando houver horários agendados, os próximos aparecem aqui.", "Abrir agenda", "/agenda") }}
+      {% endif %}
+    </section>
+
+    <section class="panel" aria-labelledby="h-finance">
+      <div class="panel-head"><h2 class="panel-title" id="h-finance">Resumo financeiro</h2><span class="badge">{{ overview.today|month_year }}</span></div>
+      {% if overview.revenue_month_cents or overview.expenses_month_cents %}
+        <dl class="figures">
+          <div class="figure"><dt>Receitas</dt><dd>{{ overview.revenue_month_cents|brl }}</dd></div>
+          <div class="figure"><dt>Despesas</dt><dd>{{ overview.expenses_month_cents|brl }}</dd></div>
+          <div class="figure is-total"><dt>Lucro</dt><dd class="{{ 'is-negative' if overview.profit_month_cents < 0 }}">{{ overview.profit_month_cents|brl }}</dd></div>
+        </dl>
+      {% else %}
+        {{ empty_state("wallet", "Sem lançamentos neste mês", "Receitas e despesas pagas aparecem aqui como resumo.", "Abrir financeiro", "/financeiro") }}
+      {% endif %}
+    </section>
+  </div>
+
+  <section class="panel section-gap" aria-labelledby="h-activity">
+    <div class="panel-head"><h2 class="panel-title" id="h-activity">Atividades recentes</h2></div>
+    {% if overview.activities %}
+      <ul class="rows">
+        {% for act in overview.activities %}
+        <li class="row">
+          <span class="row-dot">{{ icon("clock", 16) }}</span>
+          <div class="row-main"><p class="row-title">{{ act.description }}</p>{% if act.user %}<p class="row-sub">{{ act.user.name }}</p>{% endif %}</div>
+          <span class="row-end">{{ act.created_at|relative }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      {{ empty_state("inbox", "Nenhuma atividade ainda", "O que for criado ou alterado no sistema aparece aqui.", compact=True) }}
+    {% endif %}
+  </section>
+{% endblock %}

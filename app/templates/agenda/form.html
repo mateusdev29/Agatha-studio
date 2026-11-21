@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import page_header %}
+{% from "components/_forms.html" import field, form_errors %}
+{% set title = "Editar atendimento" if appt else "Novo atendimento" %}
+{% block title %}{{ title }} · Agatha Souza Studio{% endblock %}
+
+{% block content %}
+  {{ page_header(title, appt.client.name if appt else "Escolha o cliente e o horário. Conflitos são avisados.") }}
+
+  {% if not form.client_id.choices %}
+  <section class="panel"><div class="empty">
+    <p class="empty-title">Cadastre um cliente primeiro</p>
+    <p class="empty-text">Todo atendimento é agendado para um cliente.</p>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('clients.create') }}">Cadastrar cliente</a>
+  </div></section>
+  {% else %}
+  <section class="panel">
+    <form class="panel-body" method="post" novalidate>
+      {{ form.hidden_tag() }}{{ form_errors(form) }}
+      <div class="form-grid">
+        {{ field(form.client_id) }}
+        {{ field(form.project_id, **{"data-depends-on": "client_id"}) }}
+        {{ field(form.date) }}
+        {{ field(form.time) }}
+        {{ field(form.duration_minutes, type="number", min=15, max=720, step=15) }}
+        {{ field(form.service, list="services-list", autocomplete="off", placeholder="Ex.: Sessão de tatuagem") }}
+        {{ field(form.price_cents, inputmode="decimal", placeholder="0,00", autocomplete="off") }}
+        {{ field(form.deposit_cents, inputmode="decimal", placeholder="0,00", autocomplete="off", disabled=deposit_locked, help=("Já lançado no Financeiro: o valor passa a ser alterado por lá." if deposit_locked else None)) }}
+        {{ field(form.notes, span=2, rows=3) }}
+      </div>
+      <datalist id="services-list">{% for s in services %}<option value="{{ s.name }}">{% endfor %}</datalist>
+      <div class="form-actions">
+        <a class="btn btn-ghost" href="{{ url_for('agenda.detail', appt_id=appt.id) if appt else url_for('agenda.index') }}">Cancelar</a>
+        <button class="btn btn-primary" type="submit">{{ "Salvar alterações" if appt else "Agendar" }}</button>
+      </div>
+    </form>
+  </section>
+  {% endif %}
+{% endblock %}

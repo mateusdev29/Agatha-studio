@@ -1,0 +1,20 @@
+{% from "components/_ui.html" import empty_state, badge, icon %}
+<section class="panel">
+  <div class="panel-head"><h2 class="panel-title">Projetos</h2>
+    {% if not client.is_archived %}<a class="btn btn-ghost btn-sm" href="{{ url_for('projects.create', cliente=client.id) }}">{{ icon("plus", 16) }} Novo projeto</a>{% endif %}
+  </div>
+  {% if items %}
+    <ul class="rows">
+      {% for p in items %}
+      <li class="row">
+        <div class="row-main"><p class="row-title"><a class="link-strong" href="{{ url_for('projects.detail', project_id=p.id) }}">{{ p.name }}</a></p>
+          <p class="row-sub">{{ [p.style, p.body_region.name if p.body_region else None, p.size]|select|join(" · ") or "Sem detalhes" }}</p></div>
+        <span class="row-end tabular">{{ p.price_cents|brl }}</span>
+        {{ badge(p.status.label, p.status|tone) }}
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {{ empty_state("layers", "Nenhum projeto", "Os projetos de tatuagem deste cliente aparecem aqui.", compact=True) }}
+  {% endif %}
+</section>

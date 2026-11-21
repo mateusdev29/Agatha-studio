@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "components/_ui.html" import page_header, badge, empty_state %}
+{% from "components/_forms.html" import field, form_errors %}
+{% from "settings/_nav.html" import settings_nav %}
+{% block title %}Categorias · Agatha Souza Studio{% endblock %}
+{% block content %}
+  {{ page_header("Configurações", "Categorias financeiras" if group == "financeiras" else "Categorias de estoque") }}
+  {{ settings_nav(current) }}
+  <div class="split">
+    <section class="panel">
+      {% if items %}<div class="table-wrap"><table class="table"><thead><tr><th>Categoria</th><th>Tipo</th><th>Situação</th><th></th></tr></thead><tbody>
+        {% for c in items %}<tr><td class="cell-primary" data-label="Categoria">{{ c.name }}</td><td data-label="Tipo">{{ c.kind.label }}</td>
+          <td data-label="Situação">{{ badge("Ativa", "success") if c.is_active else badge("Inativa") }}</td><td data-label="Ações"><a class="btn btn-ghost btn-sm" href="{{ url_for('settings.category_edit', item_id=c.id) }}">Editar</a></td></tr>{% endfor %}</tbody></table></div>
+      {% else %}{{ empty_state("settings", "Nenhuma categoria", "Adicione a primeira categoria.", compact=True) }}{% endif %}
+    </section>
+    <section class="panel"><div class="panel-head"><h2 class="panel-title">Nova categoria</h2></div>
+      <form class="panel-body" method="post" novalidate>{{ form.hidden_tag() }}{{ form_errors(form) }}
+        {{ field(form.name) }}{% if form.kind %}{{ field(form.kind) }}{% endif %}
+        <div class="field"><label class="check">{{ form.is_active() }} Ativa</label></div>
+        <button class="btn btn-primary btn-block" type="submit">Adicionar</button></form></section>
+  </div>
+{% endblock %}

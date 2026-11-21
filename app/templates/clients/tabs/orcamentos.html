@@ -1,0 +1,20 @@
+{% from "components/_ui.html" import empty_state, badge, icon %}
+<section class="panel">
+  <div class="panel-head"><h2 class="panel-title">Orçamentos</h2>
+    {% if not client.is_archived %}<a class="btn btn-ghost btn-sm" href="{{ url_for('quotes.create', cliente=client.id) }}">{{ icon("plus", 16) }} Novo orçamento</a>{% endif %}
+  </div>
+  {% if items %}
+    <ul class="rows">
+      {% for q in items %}
+      <li class="row">
+        <div class="row-main"><p class="row-title"><a class="link-strong" href="{{ url_for('quotes.detail', quote_id=q.id) }}">{{ q.description|truncate(70) }}</a></p>
+          <p class="row-sub">{% if q.valid_until %}Válido até {{ q.valid_until|date_br }}{% else %}Sem validade definida{% endif %}</p></div>
+        <span class="row-end tabular">{{ q.price_cents|brl }}</span>
+        {{ badge(q.status.label, q.status|tone) }}
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {{ empty_state("file", "Nenhum orçamento", "Os orçamentos feitos para este cliente aparecem aqui.", compact=True) }}
+  {% endif %}
+</section>

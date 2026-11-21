@@ -1,0 +1,9 @@
+{% macro settings_nav(current) %}
+<nav class="tabs" aria-label="Configurações">
+  {% for key, label, href in [("perfil","Perfil",url_for('settings.profile')),("estudio","Estúdio",url_for('settings.studio')),("servicos","Serviços",url_for('settings.services')),
+      ("cat-financeiras","Categorias financeiras",url_for('settings.categories', group='financeiras')),("cat-estoque","Categorias de estoque",url_for('settings.categories', group='estoque')),
+      ("anamnese","Perguntas da anamnese",url_for('anamnesis.questions')),("preferencias","Preferências",url_for('settings.preferences'))] %}
+  <a class="tab" href="{{ href }}"{% if key == current %} aria-current="page"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</nav>
+{% endmacro %}
