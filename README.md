@@ -122,7 +122,7 @@ Depois do teste manual, crie a tarefa diária (padrão: 22:00) no PowerShell, de
 Para escolher outro horário use `-Time '23:30'`. A tarefa roda sob a conta atual do Windows quando ela estiver conectada; se o computador estiver desligado, o Task Scheduler tenta executá-la no próximo login. O Histórico do Agendador de Tarefas mostra o resultado. Cada execução mantém também o snapshot local do banco (os cinco mais recentes); os snapshots remotos não são apagados automaticamente, para preservar histórico até definirmos uma política de retenção.
 
 ## Segurança
-- Senhas com hash (scrypt); bloqueio de 15 min após 5 falhas; erro de login genérico; `?next=` validado; logout só por POST.
+- Senhas com hash (scrypt); bloqueio de 15 min após 5 falhas na conta e por navegador/IP (só o identificador HMAC é guardado); erro de login genérico; `?next=` validado; logout só por POST.
 - Todas as rotas administrativas exigem login; CSRF em todo POST; ORM (sem SQL montado à mão); validação no servidor.
 - CSP restritiva (`script-src 'self'`, sem `style=""`/`<script>` inline), `nosniff`, `X-Frame-Options: DENY`; fontes e Chart.js locais, sem CDN.
 - **Uploads:** conteúdo validado com Pillow (a extensão enviada é ignorada), imagem re-codificada (remove EXIF/GPS e cargas anexadas),

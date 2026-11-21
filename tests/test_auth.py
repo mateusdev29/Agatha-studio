@@ -1,6 +1,6 @@
 import pytest
 from app.extensions import db
-from app.models import ActivityLog, User
+from app.models import ActivityLog, LoginThrottle, User
 from tests.conftest import TEST_PASSWORD
 
 
@@ -66,6 +66,23 @@ def test_successful_login_resets_failed_counter(app, login):
     login()
     user = User.query.filter_by(email="agatha@example.com").one()
     assert user.failed_login_count == 0
+    assert LoginThrottle.query.count() == 0
+
+
+def test_device_lockout_covers_unknown_usernames(app, client, login):
+    for n in range(app.config["MAX_DEVICE_FAILED_LOGINS"]):
+        login(email=f"tentativa{n}@example.com", password="errada")
+    blocked = login(email="agatha@example.com")
+    assert "Muitas tentativas" in blocked.get_data(as_text=True)
+    assert client.get("/").status_code == 302
+
+
+def test_device_throttle_uses_hashed_identifier(app, login):
+    login(email="ninguem@example.com", password="errada")
+    entry = LoginThrottle.query.one()
+    assert len(entry.key_hash) == 64
+    assert "127.0.0.1" not in entry.key_hash
+    assert "Werkzeug" not in entry.key_hash
 
 
 def test_inactive_user_cannot_login(app, client, login):
