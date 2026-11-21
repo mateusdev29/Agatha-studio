@@ -46,10 +46,10 @@ def create():
     form = AppointmentForm()
     if request.method == "GET":
         client_id = request.args.get("cliente", type=int)
-        if client_id and any(client_id == c for c, _ in form.client_id.choices):
+        if client_id and any(client_id == choice.value for choice in form.client_id.choices):
             form.client_id.data = client_id
         project_id = request.args.get("projeto", type=int)
-        if project_id and any(project_id == p[0] for p in form.project_id.choices):
+        if project_id and any(project_id == choice.value for choice in form.project_id.choices):
             form.project_id.data = project_id
         form.date.data = cal.parse_date(request.args.get("data"))
         form.duration_minutes.data = default_duration()

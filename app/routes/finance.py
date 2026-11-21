@@ -41,7 +41,7 @@ def create(kind):
     form = TransactionForm(kind=KINDS[kind])
     if request.method == "GET":
         form.date.data = today_local()
-        if kind == "receitas" and request.args.get("cliente", type=int) in [c for c, _ in form.client_id.choices]:
+        if kind == "receitas" and request.args.get("cliente", type=int) in [choice.value for choice in form.client_id.choices]:
             form.client_id.data = request.args.get("cliente", type=int)
     if form.validate_on_submit():
         svc.save(None, form.cleaned(), current_user)
