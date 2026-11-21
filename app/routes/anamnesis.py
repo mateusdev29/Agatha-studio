@@ -27,7 +27,7 @@ def fill():
     answers, errors = [], {}
     if request.method == "GET":
         cid = request.args.get("cliente", type=int)
-        if cid and any(cid == c for c, _ in form.client_id.choices):
+        if cid and any(cid == choice.value for choice in form.client_id.choices):
             form.client_id.data = cid
     else:
         answers, errors = svc.parse_answers(questions, request.form)

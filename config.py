@@ -1,5 +1,6 @@
 """Configuração da aplicação. Segredos vêm SEMPRE de variáveis de ambiente."""
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -29,6 +30,7 @@ class Config:
     SESSION_COOKIE_SECURE = False
     REMEMBER_COOKIE_HTTPONLY = True
     REMEMBER_COOKIE_SAMESITE = "Lax"
+    REMEMBER_COOKIE_DURATION = timedelta(days=30)
     PERMANENT_SESSION_LIFETIME = 60 * 60 * 12  # 12 h
 
     # Uploads (usados a partir da Fase 3)

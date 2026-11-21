@@ -50,7 +50,7 @@ def index():
 def create():
     preselected = request.args.get("cliente", type=int)
     form = ProjectForm()
-    if request.method == "GET" and preselected and any(preselected == c for c, _ in form.client_id.choices):
+    if request.method == "GET" and preselected and any(preselected == choice.value for choice in form.client_id.choices):
         form.client_id.data = preselected
     if form.validate_on_submit():
         project = svc.create_project(form.cleaned(), current_user)

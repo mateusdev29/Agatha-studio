@@ -1,6 +1,42 @@
-from wtforms import StringField
+from wtforms import SelectField as WTSelectField, StringField
+from wtforms.fields import SelectChoice
 
 from app.utils.money import format_input, parse_brl
+
+
+def _select_choices(choices):
+    """Convert legacy project tuples into WTForms' explicit choice objects."""
+    if choices is None:
+        return None
+    if callable(choices):
+        return lambda: _select_choices(choices())
+    normalized = []
+    for choice in choices:
+        if isinstance(choice, SelectChoice):
+            normalized.append(choice)
+        elif isinstance(choice, str):
+            normalized.append(SelectChoice(choice))
+        elif isinstance(choice, tuple) and len(choice) in (2, 3):
+            value, label, *render_kw = choice
+            normalized.append(SelectChoice(value, label, render_kw[0] if render_kw else {}))
+        else:
+            raise TypeError(f"Unsupported select choice: {choice!r}")
+    return normalized
+
+
+class SelectField(WTSelectField):
+    """SelectField that stores only WTForms SelectChoice values."""
+
+    def __init__(self, *args, choices=None, **kwargs):
+        super().__init__(*args, choices=_select_choices(choices), **kwargs)
+
+    @property
+    def choices(self):
+        return WTSelectField.choices.fget(self)
+
+    @choices.setter
+    def choices(self, value):
+        WTSelectField.choices.fset(self, _select_choices(value))
 
 
 class MoneyField(StringField):

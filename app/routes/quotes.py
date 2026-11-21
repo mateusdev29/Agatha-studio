@@ -41,7 +41,7 @@ def create():
     form = QuoteForm()
     if request.method == "GET":
         preselected = request.args.get("cliente", type=int)
-        if preselected and any(preselected == c for c, _ in form.client_id.choices):
+        if preselected and any(preselected == choice.value for choice in form.client_id.choices):
             form.client_id.data = preselected
         form.valid_until.data = today_local() + timedelta(days=quote_validity_days())
     if form.validate_on_submit():

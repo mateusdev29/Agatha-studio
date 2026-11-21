@@ -262,10 +262,12 @@ def test_transitions_require_post(auth_client):
 
 def test_detail_actions_per_status(auth_client):
     c = mk_client()
-    expect = {S.WAITING: "Confirmar atendimento", S.CONFIRMED: "Marcar como realizado", S.CANCELED: "Reativar atendimento", S.DONE: "encerrado", S.RESCHEDULED: "encerrado"}
+    expect = {S.WAITING: "Confirmar atendimento", S.CONFIRMED: "", S.CANCELED: "Reativar atendimento", S.DONE: "encerrado", S.RESCHEDULED: "encerrado"}
     for st, text in expect.items():
         x = mk_appt(c, at(50 + list(expect).index(st)), status=st)
         assert text in auth_client.get(f"/agenda/{x.id}").get_data(as_text=True), st
+    past = mk_appt(c, at(-1), status=S.CONFIRMED)
+    assert "Marcar como realizado" in auth_client.get(f"/agenda/{past.id}").get_data(as_text=True)
     assert "data-confirm=" in auth_client.get(f"/agenda/{mk_appt(c, at(70)).id}").get_data(as_text=True)
 
 

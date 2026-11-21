@@ -86,7 +86,7 @@ def create():
     if request.method == "GET":
         form.evaluated_on.data = today_local()
         cid = request.args.get("cliente", type=int)
-        if cid and any(cid == c for c, _ in form.client_id.choices):
+        if cid and any(cid == choice.value for choice in form.client_id.choices):
             form.client_id.data = cid
     if form.validate_on_submit():
         ev = Evaluation(**form.cleaned())

@@ -2,7 +2,8 @@ import re
 from datetime import date
 
 from flask_wtf import FlaskForm
-from wtforms import DateField, SelectField, StringField, TextAreaField
+from app.forms.fields import SelectField
+from wtforms import DateField, StringField, TextAreaField
 from wtforms.validators import DataRequired, Email, Length, Optional, ValidationError
 
 SOURCE_CHOICES = [
