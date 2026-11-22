@@ -5,6 +5,12 @@
 {% block content %}
   {% call page_header(client.name, "Cliente desde " ~ (client.created_at|local_date)) %}
     <a class="btn btn-ghost" href="{{ url_for('clients.edit', client_id=client.id) }}">Editar</a>
+    <form method="post" action="{{ url_for('clients.erase_data', client_id=client.id) }}"
+          data-confirm="Remove permanentemente os dados identificáveis, fichas, projetos, orçamentos, agenda e avaliações. Registros financeiros ficam sem vínculo ou texto identificável. Backups antigos podem conservar cópias até vencerem sua retenção."
+          data-confirm-title="Excluir dados de {{ client.name }}?" data-confirm-label="Excluir dados" data-confirm-tone="danger">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-danger" type="submit">Excluir dados</button>
+    </form>
     {% if client.is_archived %}
       <form method="post" action="{{ url_for('clients.restore', client_id=client.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

@@ -1,10 +1,11 @@
 from datetime import date, datetime, timedelta
+from pathlib import Path
 
 import pytest
 
 from app.extensions import db
 from app.models import (ActivityLog, AnamnesisResponse, Appointment, Client, Evaluation,
-                        FinancialTransaction, Project, Quote)
+                        FinancialTransaction, Project, ProjectReference, Quote)
 from app.models.enums import (AppointmentStatus, PaymentMethod, ProjectStatus, QuoteStatus,
                               TransactionStatus, TransactionType)
 from app.utils.dates import now_local, today_local
@@ -24,6 +25,7 @@ def make_client(name="Cliente", **kw):
 @pytest.mark.parametrize("method,path", [
     ("get", "/clientes/"), ("get", "/clientes/novo"), ("post", "/clientes/novo"), ("get", "/clientes/1"),
     ("get", "/clientes/1/editar"), ("post", "/clientes/1/arquivar"), ("post", "/clientes/1/restaurar"),
+    ("post", "/clientes/1/excluir-dados"),
 ])
 def test_all_routes_require_login(client, method, path):
     r = getattr(client, method)(path)
@@ -162,6 +164,53 @@ def test_detail_marks_current_tab(auth_client):
     c = make_client("Marina")
     html = auth_client.get(f"/clientes/{c.id}?aba=agenda").get_data(as_text=True)
     assert 'aria-current="page">Agenda<' in html
+
+
+def test_lgpd_erasure_deletes_personal_records_and_unlinks_finances(app, auth_client):
+    from app.services.activity_service import log_activity
+
+    c = make_client("Marina Lopes", phone="(71) 99999-0000", email="marina@example.com", notes="DADO-PRIVADO")
+    _populate(c)
+    project = Project.query.filter_by(client_id=c.id).one()
+    appointment = Appointment.query.filter_by(client_id=c.id).order_by(Appointment.starts_at).first()
+    today = today_local()
+    transaction = FinancialTransaction(
+        type=TransactionType.INCOME, description="Marina Lopes - pagamento", notes="OBS-PRIVADA",
+        amount_cents=12345, date=today, client_id=c.id, project_id=project.id,
+        appointment_id=appointment.id, status=TransactionStatus.PAID,
+    )
+    db.session.add(transaction)
+    db.session.flush()
+    transaction_id = transaction.id
+    log_activity("updated", "Marina Lopes - pagamento alterado", None, "transaction", transaction_id)
+    reference = ProjectReference(project_id=project.id, stored_filename="lgpd-test.webp",
+                                 original_filename="Marina Lopes.jpg")
+    db.session.add(reference)
+    db.session.commit()
+    images = Path(app.config["UPLOAD_FOLDER"]) / "projects"
+    images.mkdir(parents=True)
+    (images / "lgpd-test.webp").write_bytes(b"image")
+    (images / "lgpd-test_thumb.webp").write_bytes(b"thumb")
+
+    response = auth_client.post(f"/clientes/{c.id}/excluir-dados")
+
+    assert response.status_code == 302
+    assert db.session.get(Client, c.id) is None
+    assert Project.query.count() == 0
+    assert Appointment.query.count() == 0
+    assert Quote.query.count() == 0
+    assert AnamnesisResponse.query.count() == 0
+    assert Evaluation.query.count() == 0
+    kept = db.session.get(FinancialTransaction, transaction_id)
+    assert kept.amount_cents == 12345 and kept.date == today and kept.status == TransactionStatus.PAID
+    assert kept.client_id is None and kept.project_id is None and kept.appointment_id is None
+    assert kept.description == "Lançamento financeiro de cliente desvinculado"
+    assert kept.notes is None and kept.supplier is None
+    assert not (images / "lgpd-test.webp").exists()
+    assert not (images / "lgpd-test_thumb.webp").exists()
+    logs = [log.description for log in ActivityLog.query.all()]
+    assert any("Dados de cliente eliminados" in value for value in logs)
+    assert all("Marina Lopes" not in value and "OBS-PRIVADA" not in value for value in logs)
 
 
 def test_sidebar_keeps_clients_active_on_detail(auth_client):

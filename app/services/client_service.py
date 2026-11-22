@@ -1,13 +1,16 @@
 """Regras do módulo Clientes (sem request/response)."""
 from dataclasses import dataclass
 from datetime import date, datetime, time
+from pathlib import Path
 
-from sqlalchemy import func, or_
+from flask import current_app
+from sqlalchemy import and_, delete, func, or_, select, update
 
 from app.extensions import db
 from sqlalchemy.orm import joinedload
 
-from app.models import Appointment, Client, Evaluation, FinancialTransaction, Project, Quote, AnamnesisResponse
+from app.models import (ActivityLog, AnamnesisResponse, Appointment, Client, Evaluation,
+                        FinancialTransaction, Project, ProjectReference, ProjectSession, Quote)
 from app.models.base import utcnow
 from app.models.enums import AppointmentStatus, TransactionStatus, TransactionType
 from app.services.activity_service import log_activity
@@ -70,6 +73,91 @@ def restore_client(client: Client, user) -> None:
     client.archived_at = None
     log_activity("restored", f"Cliente restaurado: {client.name}", user, "client", client.id)
     db.session.commit()
+
+
+def erase_client_data(client: Client, user) -> tuple[int, int]:
+    """Apaga dados operacionais e desvincula lançamentos financeiros associados.
+
+    Retorna (arquivos removidos, arquivos que falharam na remoção).
+    """
+    client_id = client.id
+    project_ids = db.session.scalars(select(Project.id).where(Project.client_id == client_id)).all()
+    appointment_ids = db.session.scalars(select(Appointment.id).where(Appointment.client_id == client_id)).all()
+    quote_ids = db.session.scalars(select(Quote.id).where(Quote.client_id == client_id)).all()
+    response_ids = db.session.scalars(
+        select(AnamnesisResponse.id).where(AnamnesisResponse.client_id == client_id)
+    ).all()
+    reference_names = db.session.scalars(
+        select(ProjectReference.stored_filename).where(ProjectReference.project_id.in_(project_ids))
+    ).all() if project_ids else []
+
+    transaction_filters = [FinancialTransaction.client_id == client_id]
+    if project_ids:
+        transaction_filters.append(FinancialTransaction.project_id.in_(project_ids))
+    if appointment_ids:
+        transaction_filters.append(FinancialTransaction.appointment_id.in_(appointment_ids))
+    transactions = db.session.scalars(
+        select(FinancialTransaction).where(or_(*transaction_filters))
+    ).all()
+    transaction_ids = [item.id for item in transactions]
+
+    activity_filters = [and_(ActivityLog.entity_type == "client", ActivityLog.entity_id == client_id)]
+    for entity_type, ids in (("project", project_ids), ("appointment", appointment_ids),
+                             ("quote", quote_ids), ("anamnesis", response_ids)):
+        if ids:
+            activity_filters.append(and_(ActivityLog.entity_type == entity_type, ActivityLog.entity_id.in_(ids)))
+    db.session.execute(delete(ActivityLog).where(or_(*activity_filters)))
+
+    # Mantém valores, datas, categoria, meio e situação para o livro financeiro;
+    # remove vínculos e textos que possam identificar a pessoa.
+    for transaction in transactions:
+        transaction.client_id = None
+        transaction.project_id = None
+        transaction.appointment_id = None
+        transaction.description = "Lançamento financeiro de cliente desvinculado"
+        transaction.notes = None
+        transaction.supplier = None
+    if transaction_ids:
+        db.session.execute(
+            update(ActivityLog)
+            .where(ActivityLog.entity_type == "transaction", ActivityLog.entity_id.in_(transaction_ids))
+            .values(description="Lançamento financeiro de cliente desvinculado")
+        )
+
+    # Exclui dependências em ordem, sem deixar referências ao cliente no banco.
+    evaluation_filters = [Evaluation.client_id == client_id]
+    if appointment_ids:
+        evaluation_filters.append(Evaluation.appointment_id.in_(appointment_ids))
+    db.session.execute(delete(Evaluation).where(or_(*evaluation_filters)))
+    db.session.execute(delete(AnamnesisResponse).where(AnamnesisResponse.client_id == client_id))
+    if appointment_ids:
+        db.session.execute(delete(Appointment).where(Appointment.id.in_(appointment_ids)))
+    if quote_ids:
+        db.session.execute(delete(Quote).where(Quote.id.in_(quote_ids)))
+    if project_ids:
+        db.session.execute(delete(ProjectReference).where(ProjectReference.project_id.in_(project_ids)))
+        db.session.execute(delete(ProjectSession).where(ProjectSession.project_id.in_(project_ids)))
+        db.session.execute(delete(Project).where(Project.id.in_(project_ids)))
+    db.session.execute(delete(Client).where(Client.id == client_id))
+    log_activity("erased", "Dados de cliente eliminados a pedido do titular", user, "privacy", None)
+    db.session.commit()
+
+    uploads = Path(current_app.config["UPLOAD_FOLDER"]) / "projects"
+    removed = failed = 0
+    for filename in reference_names:
+        if Path(filename).name != filename:
+            current_app.logger.error("Nome de arquivo inválido ao remover imagem de cliente")
+            failed += 1
+            continue
+        stem = filename.rsplit(".", 1)[0]
+        for image in (uploads / filename, uploads / f"{stem}_thumb.webp"):
+            try:
+                image.unlink(missing_ok=True)
+                removed += 1
+            except OSError:
+                current_app.logger.exception("Falha ao remover arquivo de cliente após exclusão")
+                failed += 1
+    return removed, failed
 
 
 # ---------- Página individual ----------
