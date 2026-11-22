@@ -81,3 +81,16 @@ def restore(client_id):
     svc.restore_client(client, current_user)
     flash(f"{client.name} foi restaurado.", "success")
     return redirect(url_for("clients.detail", client_id=client.id))
+
+
+@bp.route("/<int:client_id>/excluir-dados", methods=["POST"])
+def erase_data(client_id):
+    client = db.get_or_404(Client, client_id)
+    _, failed_files = svc.erase_client_data(client, current_user)
+    message = "Dados identificáveis do cliente foram excluídos; os lançamentos financeiros foram desvinculados e tiveram os textos livres removidos."
+    if failed_files:
+        message += f" Não foi possível remover {failed_files} arquivo(s) de imagem; confira os logs do aplicativo."
+        flash(message, "error")
+    else:
+        flash(message, "success")
+    return redirect(url_for("clients.index"))

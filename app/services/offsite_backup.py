@@ -53,4 +53,18 @@ def create_offsite_backup() -> str:
         detail = (exc.stderr or exc.stdout or "sem detalhes").strip()
         raise OffsiteBackupError(f"Restic não concluiu o backup: {detail[-1200:]}") from exc
 
-    return (completed.stdout or "Backup Restic concluído.").strip()
+    try:
+        subprocess.run(
+            [restic, "-r", repository, "--password-file", str(secret_path),
+             "forget", "--tag", "agatha-studio", "--keep-daily", "30", "--prune"],
+            check=True, capture_output=True, text=True, timeout=60 * 60,
+        )
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError) as exc:
+        detail = getattr(exc, "stderr", None) or getattr(exc, "stdout", None) or "sem detalhes"
+        raise OffsiteBackupError(
+            "O backup foi enviado, mas a limpeza da retenção falhou. Confira o histórico do Agendador de Tarefas "
+            f"e o Dropbox: {str(detail).strip()[-1200:]}"
+        ) from exc
+
+    backup_output = (completed.stdout or "Backup Restic concluído.").strip()
+    return f"{backup_output}\nRetenção aplicada: últimos 30 backups diários."

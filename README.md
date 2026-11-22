@@ -119,7 +119,7 @@ Depois do teste manual, crie a tarefa diária (padrão: 22:00) no PowerShell, de
 ```powershell
 .\scripts\install_daily_backup_task.ps1
 ```
-Para escolher outro horário use `-Time '23:30'`. A tarefa roda sob a conta atual do Windows quando ela estiver conectada; se o computador estiver desligado, o Task Scheduler tenta executá-la no próximo login. O Histórico do Agendador de Tarefas mostra o resultado. Cada execução mantém também o snapshot local do banco (os cinco mais recentes); os snapshots remotos não são apagados automaticamente, para preservar histórico até definirmos uma política de retenção.
+Para escolher outro horário use `-Time '23:30'`. A tarefa roda sob a conta atual do Windows quando ela estiver conectada; se o computador estiver desligado, o Task Scheduler tenta executá-la no próximo login. O Histórico do Agendador de Tarefas mostra o resultado. Cada execução mantém também o snapshot local do banco (os cinco mais recentes). No Dropbox, mantém os últimos 30 snapshots diários e remove os mais antigos; assim, depois de um pedido de eliminação, os dados identificáveis deixam de existir também nas cópias remotas após o prazo de retenção (até 30 dias, se o backup diário estiver funcionando).
 
 ## Segurança
 - Senhas com hash (scrypt); bloqueio de 15 min após 5 falhas na conta e por navegador/IP (só o identificador HMAC é guardado); erro de login genérico; `?next=` validado; logout só por POST.
@@ -135,7 +135,7 @@ Para escolher outro horário use `-Time '23:30'`. A tarefa roda sob a conta atua
 **Gerais:** dinheiro em centavos inteiros (digita-se `1.200,50`); enums gravados como texto; horários da agenda em horário local
 do estúdio, `created_at` em UTC; busca sem distinção de maiúsculas, mas **não ignora acentos** (limitação do SQLite).
 
-**Clientes:** arquivar em vez de excluir (preserva histórico). **Projetos:** não são excluídos (use *Cancelado*); uploads de referência com miniatura.
+**Clientes:** arquivar em vez de excluir no uso normal. Para um pedido de eliminação, a ação específica apaga cliente, fichas, avaliações, agenda, orçamentos, projetos e imagens; mantém os lançamentos financeiros sem vínculo com cliente/projeto/atendimento e remove seus textos livres. Valores, datas e categoria permanecem no livro financeiro. Cópias locais antigas duram até cinco execuções do backup e cópias do Dropbox até 30 backups diários; uma restauração de backup pode trazer dados anteriores ao pedido. **Projetos:** não são excluídos no uso normal (use *Cancelado*); uploads de referência com miniatura.
 **Orçamentos:** status por máquina de estados; só envia/aprova com valor definido e validade em dia; *aprovar e criar projeto* é atômico
 e nunca duplica; com projeto criado o orçamento fica travado; expiração automática; texto pronto para WhatsApp (sem observações internas).
 **Agenda:** semana começa na segunda; sem sobreposição de horários; remarcar preserva o histórico e leva o sinal junto; só marca *realizado* após o início.
